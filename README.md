@@ -1,19 +1,23 @@
 # Games<br>
 A collection of wep apps I have made<br><br>
 
-Trade Wars<br>
-My version of a classic game called Dope Wars<br>
-https://alecdvor.github.io/Games/tradewars.html<br><br>
 
-LightsOut<br>
+<a href="https://alecdvor.github.io/Games/tradewars.html">
+Trade Wars</a><br>
+My version of a classic game called Dope Wars<br><br><br>
+
+<a href="https://alecdvor.github.io/Games/lightsout.html">
+LightsOut</a><br>
 My version of the Tiger Handheld game I grew up playing<br>
-https://alecdvor.github.io/Games/lightsout.html<br><br>
+<br><br>
 
-Bowling - Work in progress<br>
+<a href="https://alecdvor.github.io/Games/bowling.html">
+Bowling - Work in progress</a><br>
 Drag and flick the ball down the lane<br>
-https://alecdvor.github.io/Games/bowling.html<br><br>
+<br><br>
 
-Simple Farm - Work in progress<br>
+<a href="https://alecdvor.github.io/Games/simplefarm.html">
+Simple Farm - Work in progress</a><br>
 Move with arrow keys and plant crops with spacebar<br>
-https://alecdvor.github.io/Games/simplefarm.html<br><br>
+<br><br>
 
