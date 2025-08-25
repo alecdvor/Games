@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Bowling Game</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        #game-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            position: relative;
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        canvas {
+            display: block;
+            border-radius: 8px;
+            cursor: pointer;
+            touch-action: none; /* Disable default touch actions for better drag control */
+        }
+
+        #ui-container {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            z-index: 10;
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 10px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        #score-display {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        #instructions {
+            font-size: 1em;
+            color: #555;
+            text-align: center;
+        }
+
+        #message-box {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.2em;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+            z-index: 100;
+        }
+
+        #reset-button {
+            padding: 10px 20px;
+            font-size: 1em;
+            color: white;
+            background: linear-gradient(145deg, #007BFF, #0056b3);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        #reset-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        #reset-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="ui-container">
+            <span id="score-display">Score: 0</span>
+            <span id="instructions">Drag and release to bowl!</span>
+            <button id="reset-button">Reset Game</button>
+        </div>
+        <canvas id="gameCanvas"></canvas>
+    </div>
+    <div id="message-box"></div>
+
+    <script>
+        // Use window.onload to ensure all assets are loaded before starting the game.
+        window.onload = function() {
+            // --- Three.js Setup ---
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ antialias: true, canvas: document.getElementById('gameCanvas') });
+
+            renderer.setSize(window.innerWidth * 0.9, window.innerHeight * 0.8);
+            renderer.setClearColor(0xf0f0f0); // Light gray background
+            
+            // Set camera position
+            camera.position.set(0, 5, -20);
+            camera.lookAt(0, 0, 0);
+
+            // Add lighting to the scene
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 10, -5);
+            scene.add(directionalLight);
+
+            // --- Cannon.js Physics World Setup ---
+            const world = new CANNON.World();
+            world.gravity.set(0, -9.82, 0); // Standard Earth gravity
+            world.broadphase = new CANNON.NaiveBroadphase();
+            world.solver.iterations = 10;
+
+            // --- Game Variables ---
+            let ballMesh, ballBody;
+            const pins = [];
+            const pinBodies = [];
+            let isDragging = false;
+            let startDragPos = new THREE.Vector2();
+            let isBallRolled = false;
+            let score = 0;
+            let pinsKnockedDown = 0;
+            let canBowl = true;
+
+            const messageBox = document.getElementById('message-box');
+            const scoreDisplay = document.getElementById('score-display');
+            const instructions = document.getElementById('instructions');
+            const resetButton = document.getElementById('reset-button');
+            const canvas = document.getElementById('gameCanvas');
+            let lastUpdate = performance.now(); // Initialize lastUpdate for the physics loop
+
+            // --- Collision Materials ---
+            const groundMaterial = new CANNON.Material("groundMaterial");
+            const ballMaterial = new CANNON.Material("ballMaterial");
+            const pinMaterial = new CANNON.Material("pinMaterial");
+
+            const ballGroundContact = new CANNON.ContactMaterial(ballMaterial, groundMaterial, {
+                friction: 0.1,
+                restitution: 0.2
+            });
+            world.addContactMaterial(ballGroundContact);
+            
+            const ballPinContact = new CANNON.ContactMaterial(ballMaterial, pinMaterial, {
+                friction: 0.5,
+                restitution: 0.4
+            });
+            world.addContactMaterial(ballPinContact);
+
+            const pinPinContact = new CANNON.ContactMaterial(pinMaterial, pinMaterial, {
+                friction: 0.5,
+                restitution: 0.1
+            });
+            world.addContactMaterial(pinPinContact);
+
+            // --- Game Elements Creation ---
+
+            // Create the Bowling Lane (Three.js and Cannon.js)
+            const laneGeometry = new THREE.BoxGeometry(10, 0.5, 45);
+            const laneMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 }); // Brown wood color
+            const laneMesh = new THREE.Mesh(laneGeometry, laneMaterial);
+            laneMesh.position.y = -0.25;
+            scene.add(laneMesh);
+
+            const laneBody = new CANNON.Body({ mass: 0, shape: new CANNON.Box(new CANNON.Vec3(5, 0.25, 22.5)), material: groundMaterial });
+            laneBody.position.y = -0.25;
+            world.addBody(laneBody);
+
+            // Create the Bowling Ball
+            function createBall() {
+                const ballGeometry = new THREE.SphereGeometry(1, 32, 32);
+                const ballMaterial = new THREE.MeshStandardMaterial({ color: 0x333333 });
+                ballMesh = new THREE.Mesh(ballGeometry, ballMaterial);
+                ballMesh.position.set(0, 1, -15);
+                scene.add(ballMesh);
+
+                ballBody = new CANNON.Body({ mass: 5, shape: new CANNON.Sphere(1), material: ballMaterial });
+                ballBody.position.copy(ballMesh.position);
+                world.addBody(ballBody);
+            }
+
+            // Create a single Pin
+            function createPin(x, y, z) {
+                const pinRadius = 0.5;
+                const pinHeight = 2.5;
+
+                // Create the mesh
+                const pinGeometry = new THREE.CylinderGeometry(pinRadius * 0.8, pinRadius, pinHeight, 16);
+                const pinMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff });
+                const pinMesh = new THREE.Mesh(pinGeometry, pinMaterial);
+                pinMesh.position.set(x, y, z);
+                scene.add(pinMesh);
+
+                // Create the physics body
+                const pinShape = new CANNON.Cylinder(pinRadius, pinRadius * 0.8, pinHeight, 16);
+                const pinBody = new CANNON.Body({ mass: 1, shape: pinShape, material: pinMaterial });
+                pinBody.position.copy(pinMesh.position);
+                pinBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), Math.PI / 2); // Rotate to be upright
+                world.addBody(pinBody);
+
+                pins.push(pinMesh);
+                pinBodies.push(pinBody);
+            }
+
+            // Create all 10 pins in the standard triangular formation
+            function createPins() {
+                const pinRows = [1, 2, 3, 4];
+                const pinSpacing = 2.5;
+                const startZ = 20;
+
+                let pinIndex = 0;
+                for (let i = 0; i < pinRows.length; i++) {
+                    const rowPins = pinRows[i];
+                    const startX = -(pinRows[i] - 1) * (pinSpacing / 2);
+                    for (let j = 0; j < rowPins; j++) {
+                        createPin(startX + j * pinSpacing, 1.25, startZ + i * (pinSpacing * Math.sqrt(3) / 2));
+                        pinIndex++;
+                    }
+                }
+            }
+            
+            // --- UI and Game Logic ---
+
+            function showMessage(text, duration = 3000) {
+                messageBox.textContent = text;
+                messageBox.style.opacity = 1;
+                messageBox.style.visibility = 'visible';
+                setTimeout(() => {
+                    messageBox.style.opacity = 0;
+                    messageBox.style.visibility = 'hidden';
+                }, duration);
+            }
+
+            function checkPinsKnockedDown() {
+                let knocked = 0;
+                pinBodies.forEach(pinBody => {
+                    // Check if the pin is tipped over (rotated more than a threshold)
+                    const euler = new CANNON.Vec3();
+                    pinBody.quaternion.toEuler(euler);
+                    // A small number of pins are not counted, since the balls hit their own axis of rotation, not the center of mass.
+                    if (Math.abs(euler.x) > 0.5 || Math.abs(euler.z) > 0.5) {
+                        knocked++;
+                    }
+                });
+                pinsKnockedDown = knocked;
+                score = knocked;
+                scoreDisplay.textContent = `Score: ${score}`;
+                if (knocked === 10) {
+                    showMessage("STRIKE! You knocked down all the pins!");
+                }
+            }
+
+            function resetGame() {
+                // Remove all pins and ball from scene and physics world
+                scene.remove(ballMesh);
+                world.removeBody(ballBody);
+                pins.forEach(mesh => scene.remove(mesh));
+                pinBodies.forEach(body => world.removeBody(body));
+                
+                // Clear arrays
+                pins.length = 0;
+                pinBodies.length = 0;
+                
+                // Recreate game objects
+                createBall();
+                createPins();
+                
+                isBallRolled = false;
+                canBowl = true;
+                score = 0;
+                pinsKnockedDown = 0;
+                scoreDisplay.textContent = `Score: 0`;
+                instructions.textContent = 'Drag and release to bowl!';
+            }
+
+            resetButton.addEventListener('click', resetGame);
+            
+            // --- Event Listeners for Drag and Flick ---
+
+            canvas.addEventListener('mousedown', (event) => {
+                if (isBallRolled || !canBowl) return;
+                isDragging = true;
+                startDragPos.set(event.clientX, event.clientY);
+                instructions.textContent = 'Dragging...';
+            });
+
+            canvas.addEventListener('touchstart', (event) => {
+                if (isBallRolled || !canBowl) return;
+                isDragging = true;
+                const touch = event.touches[0];
+                startDragPos.set(touch.clientX, touch.clientY);
+                instructions.textContent = 'Dragging...';
+                event.preventDefault(); // Prevent default touch behavior like scrolling
+            }, { passive: false });
+
+            canvas.addEventListener('mouseup', (event) => {
+                if (!isDragging || isBallRolled || !canBowl) return;
+                isDragging = false;
+                
+                const endDragPos = new THREE.Vector2(event.clientX, event.clientY);
+                const dragVector = startDragPos.clone().sub(endDragPos);
+                
+                // Calculate force based on drag length and direction
+                const forceMagnitude = Math.min(dragVector.length() * 0.1, 50); // Cap the force
+                const forceVector = new CANNON.Vec3(dragVector.x * 0.05, 0, dragVector.y * 0.1);
+
+                // Apply the force to the ball
+                ballBody.applyImpulse(forceVector.scale(forceMagnitude), ballBody.position);
+                isBallRolled = true;
+                canBowl = false;
+                instructions.textContent = 'Ball is rolling...';
+            });
+            
+            canvas.addEventListener('touchend', (event) => {
+                if (!isDragging || isBallRolled || !canBowl) return;
+                isDragging = false;
+                
+                const endDragPos = new THREE.Vector2(event.changedTouches[0].clientX, event.changedTouches[0].clientY);
+                const dragVector = startDragPos.clone().sub(endDragPos);
+                
+                // Calculate force based on drag length and direction
+                const forceMagnitude = Math.min(dragVector.length() * 0.1, 50); // Cap the force
+                const forceVector = new CANNON.Vec3(dragVector.x * 0.05, 0, dragVector.y * 0.1);
+
+                // Apply the force to the ball
+                ballBody.applyImpulse(forceVector.scale(forceMagnitude), ballBody.position);
+                isBallRolled = true;
+                canBowl = false;
+                instructions.textContent = 'Ball is rolling...';
+            });
+
+            // --- Main Animation Loop ---
+            function animate(currentTime) {
+                requestAnimationFrame(animate);
+
+                const deltaTime = (currentTime - lastUpdate) / 1000;
+                lastUpdate = currentTime;
+
+                // Step the physics world
+                if (world.fixedTimeStep) {
+                    world.step(world.fixedTimeStep);
+                } else {
+                    world.step(1/60, deltaTime, 3);
+                }
+
+                // Sync Three.js meshes with Cannon.js bodies
+                ballMesh.position.copy(ballBody.position);
+                ballMesh.quaternion.copy(ballBody.quaternion);
+                
+                for (let i = 0; i < pins.length; i++) {
+                    pins[i].position.copy(pinBodies[i].position);
+                    pins[i].quaternion.copy(pinBodies[i].quaternion);
+                }
+
+                // Check for pins knocked down when the ball has stopped or gone past the pins
+                if (isBallRolled) {
+                    // Check if ball's velocity has dropped below a threshold
+                    const velocityThreshold = 0.1;
+                    const ballStopped = ballBody.velocity.length() < velocityThreshold;
+                    // Check if the ball has passed the pins
+                    const ballPassedPins = ballBody.position.z > 25;
+
+                    if (ballStopped || ballPassedPins) {
+                         checkPinsKnockedDown();
+                         isBallRolled = false;
+                         instructions.textContent = 'Pins checked! Tap "Reset Game" to play again.';
+                         canBowl = false;
+                    }
+                }
+                
+                // If ball falls off the lane, reset
+                if (ballMesh.position.y < -5) {
+                    showMessage("Oops, ball off the lane! Resetting...");
+                    setTimeout(resetGame, 2000);
+                }
+
+                // Render the scene
+                renderer.render(scene, camera);
+            }
+            
+            // Start the game by creating initial elements and the animation loop
+            createBall();
+            createPins();
+            animate(performance.now()); // Pass initial time to animate
+
+            // Handle window resizing
+            window.addEventListener('resize', () => {
+                const width = window.innerWidth * 0.9;
+                const height = window.innerHeight * 0.8;
+                renderer.setSize(width, height);
+                camera.aspect = width / height;
+                camera.updateProjectionMatrix();
+            });
+        };
+    </script>
+</body>
+</html>
