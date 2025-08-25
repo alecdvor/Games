@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2D Game Environment</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Using Tailwind CSS for styling, but adding a body style for the background */
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #1a202c; /* A dark slate gray background */
+        }
+        canvas {
+            background-color: #2d3748; /* A lighter gray for the game area */
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white">
+
+    <div class="text-center">
+        <h1 class="text-3xl font-bold mb-4">2D Farming Game</h1>
+        <p class="mb-4 text-gray-400">Use arrow keys to move. Press SPACE to plant a seed.</p>
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+    </div>
+
+    <script>
+        // --- Canvas Setup ---
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // --- Player Object ---
+        const player = {
+            x: canvas.width / 2 - 25,
+            y: canvas.height / 2 - 25,
+            width: 50,
+            height: 50,
+            speed: 5,
+            dx: 0,
+            dy: 0
+        };
+
+        // --- Environment Obstacles ---
+        const obstacles = [
+            { x: 100, y: 100, width: 100, height: 50, color: '#4a5568' },
+            { x: 600, y: 400, width: 150, height: 75, color: '#4a5568' },
+            { x: 300, y: 250, width: 80, height: 80, color: '#4a5568' }
+        ];
+
+        // --- Plants Array ---
+        // This array will store all the plants in the game.
+        const plants = [];
+
+        // --- Drawing Functions ---
+
+        /**
+         * Draws the player sprite (a farmer) on the canvas.
+         */
+        function drawPlayer() {
+            const x = player.x;
+            const y = player.y;
+            const w = player.width;
+            const h = player.height;
+
+            // Hat (Brown)
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(x, y, w, h * 0.25);
+            ctx.fillRect(x + w * 0.2, y - h * 0.1, w * 0.6, h * 0.1);
+
+            // Head (Skin Tone)
+            ctx.fillStyle = '#F0D2B6';
+            ctx.fillRect(x + w * 0.2, y + h * 0.25, w * 0.6, h * 0.25);
+
+            // Body / Overalls (Blue)
+            ctx.fillStyle = '#4682B4';
+            ctx.fillRect(x, y + h * 0.5, w, h * 0.5);
+
+            // Shirt (Red)
+            ctx.fillStyle = '#DC143C';
+            ctx.fillRect(x, y + h * 0.5, w, h * 0.2);
+            
+            // Arms
+            ctx.fillRect(x - w * 0.2, y + h * 0.5, w * 0.2, h * 0.15);
+            ctx.fillRect(x + w, y + h * 0.5, w * 0.2, h * 0.15);
+        }
+
+        /**
+         * Draws the environment, including obstacles.
+         */
+        function drawEnvironment() {
+            obstacles.forEach(obstacle => {
+                ctx.fillStyle = obstacle.color;
+                ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+            });
+        }
+
+        /**
+         * Draws all the plants based on their growth stage.
+         */
+        function drawPlants() {
+            plants.forEach(plant => {
+                switch (plant.stage) {
+                    case 0: // Seed
+                        ctx.fillStyle = '#A0522D'; // Sienna
+                        ctx.beginPath();
+                        ctx.arc(plant.x, plant.y, 3, 0, Math.PI * 2);
+                        ctx.fill();
+                        break;
+                    case 1: // Seedling
+                        ctx.fillStyle = '#228B22'; // ForestGreen
+                        ctx.fillRect(plant.x - 2, plant.y - 10, 4, 10);
+                        break;
+                    case 2: // Small Plant
+                        ctx.fillStyle = '#228B22';
+                        ctx.fillRect(plant.x - 4, plant.y - 20, 8, 20);
+                        ctx.beginPath();
+                        ctx.arc(plant.x - 5, plant.y - 15, 5, 0, Math.PI * 2);
+                        ctx.arc(plant.x + 5, plant.y - 15, 5, 0, Math.PI * 2);
+                        ctx.fill();
+                        break;
+                    case 3: // Full Plant
+                        ctx.fillStyle = '#228B22';
+                        ctx.fillRect(plant.x - 6, plant.y - 30, 12, 30);
+                        ctx.beginPath();
+                        ctx.arc(plant.x - 10, plant.y - 25, 8, 0, Math.PI * 2);
+                        ctx.arc(plant.x + 10, plant.y - 25, 8, 0, Math.PI * 2);
+                        ctx.arc(plant.x, plant.y - 35, 8, 0, Math.PI * 2);
+                        ctx.fill();
+                        // Flower
+                        ctx.fillStyle = '#FFD700'; // Gold
+                        ctx.beginPath();
+                        ctx.arc(plant.x, plant.y - 35, 4, 0, Math.PI * 2);
+                        ctx.fill();
+                        break;
+                }
+            });
+        }
+
+        // --- Game Logic ---
+
+        /**
+         * Clears the entire canvas.
+         */
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        /**
+         * Creates a new plant object and adds it to the plants array.
+         */
+        function plantSeed() {
+            plants.push({
+                x: player.x + player.width / 2, // Plant in the center of the player
+                y: player.y + player.height,     // Plant at the player's feet
+                stage: 0, // Starts as a seed
+                growthTimer: 0,
+                growthThreshold: 180 // Time in frames to next stage (3 seconds at 60fps)
+            });
+        }
+
+        /**
+         * Updates the growth stage of each plant.
+         */
+        function updatePlants() {
+            plants.forEach(plant => {
+                // Only grow if not at the final stage (stage 3)
+                if (plant.stage < 3) {
+                    plant.growthTimer++;
+                    if (plant.growthTimer >= plant.growthThreshold) {
+                        plant.stage++;
+                        plant.growthTimer = 0;
+                    }
+                }
+            });
+        }
+
+        /**
+         * Updates the player's position and handles canvas boundaries.
+         */
+        function updatePlayerPosition() {
+            player.x += player.dx;
+            player.y += player.dy;
+
+            // Boundary detection
+            if (player.x < 0) player.x = 0;
+            if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+            if (player.y < 0) player.y = 0;
+            if (player.y + player.height > canvas.height) player.y = canvas.height - player.height;
+        }
+
+        /**
+         * The main game loop.
+         */
+        function gameLoop() {
+            clearCanvas();
+            drawEnvironment();
+            drawPlants();
+            drawPlayer();
+            updatePlayerPosition();
+            updatePlants();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // --- Keyboard Input Handling ---
+
+        function handleKeyDown(e) {
+            switch (e.key) {
+                case 'ArrowUp': case 'w': player.dy = -player.speed; break;
+                case 'ArrowDown': case 's': player.dy = player.speed; break;
+                case 'ArrowLeft': case 'a': player.dx = -player.speed; break;
+                case 'ArrowRight': case 'd': player.dx = player.speed; break;
+                case ' ': // Spacebar
+                    plantSeed();
+                    break;
+            }
+        }
+
+        function handleKeyUp(e) {
+            switch (e.key) {
+                case 'ArrowUp': case 'w': case 'ArrowDown': case 's': player.dy = 0; break;
+                case 'ArrowLeft': case 'a': case 'ArrowRight': case 'd': player.dx = 0; break;
+            }
+        }
+
+        // --- Event Listeners ---
+        document.addEventListener('keydown', handleKeyDown);
+        document.addEventListener('keyup', handleKeyUp);
+
+        // --- Start the game ---
+        gameLoop();
+
+    </script>
+</body>
+</html>
