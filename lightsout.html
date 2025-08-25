@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lights Out</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a202c;
+            color: #e2e8f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            /* Ensures no horizontal scrolling */
+            overflow-x: hidden;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            /* Adjusted gap for better spacing */
+            gap: 12px;
+            /* Adjusted padding for better visual balance */
+            padding: 16px;
+            border-radius: 16px;
+            background-color: #2d3748;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            /* The overall size of the container is now set by min() to ensure it doesn't get too large on big screens or too small on small screens */
+            width: min(80vh, 80vw, 300px);
+        }
+        
+        .title {
+            font-size: 2rem;
+        }
+
+        .board-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            /* Increased gap for better spacing between buttons */
+            gap: 8px;
+            height: 50vh;
+            aspect-ratio: 1 / 1; /* Ensures the grid is square */
+        }
+
+        .board-cell {
+            width: 4vw;
+            aspect-ratio: 1 / 1;
+            background-color: #4a5568;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .board-cell.on {
+            background-color: #ecc94b; /* A nice yellow for the "on" state */
+            box-shadow: 0 0 10px #ecc94b, inset 0 0 5px #f6e05e;
+        }
+
+        .board-cell:hover {
+            transform: scale(1.05);
+        }
+
+        .board-cell.on:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px #f6ad55, inset 0 0 8px #f6ad55;
+        }
+        
+        .message-box {
+            min-height: 24px;
+            text-align: center;
+            font-size: 1rem;
+            font-weight: 700;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .message-box.visible {
+            opacity: 1;
+        }
+        
+        .move-counter {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #cbd5e0;
+            margin-top: 5px;
+            text-align: center;
+        }
+
+        #restartBtn {
+            font-size: 0.875rem; /* Reduced button font size */
+            padding: 0.5rem 1rem; /* Reduced button padding */
+        }
+        
+        /* Responsive adjustments for very small screens */
+        @media (max-width: 400px) {
+            .container {
+                max-width: 95vw;
+                padding: 12px;
+                gap: 8px;
+            }
+            .title {
+                font-size: 1.5rem;
+            }
+            .board-cell {
+                border-radius: 4px;
+            }
+            .message-box, .move-counter {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 flex items-center justify-center min-h-screen">
+    <div class="container">
+        <h1 class="title font-bold text-center text-yellow-300 drop-shadow-lg">Lights Out</h1>
+        <div id="board" class="board-grid"></div>
+        <div id="message" class="message-box text-green-400"></div>
+        <div id="move-counter" class="move-counter">Moves: 0</div>
+        <button id="restartBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-full shadow-lg transition duration-300 ease-in-out transform hover:scale-105 active:scale-95">Restart Game</button>
+    </div>
+
+    <script>
+        // Constants for the game board dimensions
+        const ROWS = 5;
+        const COLS = 5;
+
+        // The game state is a 2D array of booleans (true = on, false = off)
+        let board;
+        let moves; // Variable to track the number of moves
+
+        // References to DOM elements
+        let boardElement;
+        let messageElement;
+        let moveCounterElement;
+        let restartButton;
+
+        /**
+         * Toggles the light state of a single cell.
+         * @param {number} r - The row index.
+         * @param {number} c - The column index.
+         */
+        function toggleLight(r, c) {
+            // Check if the coordinates are within the board's bounds
+            if (r >= 0 && r < ROWS && c >= 0 && c < COLS) {
+                board[r][c] = !board[r][c];
+            }
+        }
+
+        /**
+         * Handles the click event on a game cell.
+         * Toggles the clicked cell and its neighbors.
+         * @param {number} r - The row index of the clicked cell.
+         * @param {number} c - The column index of the clicked cell.
+         */
+        function handleCellClick(r, c) {
+            // Check if the game has already been won
+            if (checkWin()) {
+                return;
+            }
+
+            // Increment and update the move counter
+            moves++;
+            moveCounterElement.textContent = `Moves: ${moves}`;
+
+            // Toggle the state of the clicked cell
+            toggleLight(r, c);
+            
+            // Toggle the state of its neighbors
+            toggleLight(r - 1, c); // Top
+            toggleLight(r + 1, c); // Bottom
+            toggleLight(r, c - 1); // Left
+            toggleLight(r, c + 1); // Right
+            
+            // Re-render the board and check for a win
+            renderBoard();
+            if (checkWin()) {
+                messageElement.textContent = `You Win! 🎉 Solved in ${moves} moves.`;
+                messageElement.classList.add('visible');
+            }
+        }
+
+        /**
+         * Renders the current state of the board onto the HTML grid.
+         */
+        function renderBoard() {
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const cell = document.getElementById(`cell-${r}-${c}`);
+                    if (board[r][c]) {
+                        cell.classList.add('on');
+                    } else {
+                        cell.classList.remove('on');
+                    }
+                }
+            }
+        }
+
+        /**
+         * Checks if the player has won the game (all lights are off).
+         * @returns {boolean} - True if all lights are off, otherwise false.
+         */
+        function checkWin() {
+            // Iterate through the board and check for any 'true' value
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    if (board[r][c]) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        /**
+         * Sets up a new, solvable game board.
+         * A solvable puzzle is created by starting with a solved board and
+         * applying random clicks to it.
+         */
+        function setupGame() {
+            do {
+                // Initialize a solved board (all lights off)
+                board = Array.from({ length: ROWS }, () =>
+                    Array.from({ length: COLS }, () => false)
+                );
+
+                // Apply random clicks to create a solvable puzzle
+                // A good number of random clicks is between 10 and 20
+                const randomClicks = 10 + Math.floor(Math.random() * 11); 
+                for (let i = 0; i < randomClicks; i++) {
+                    const r = Math.floor(Math.random() * ROWS);
+                    const c = Math.floor(Math.random() * COLS);
+                    // Use a temporary board for setup clicks to avoid rendering during setup
+                    // This is for efficiency and to ensure the first render is the final puzzle state
+                    toggleLight(r, c);
+                    toggleLight(r - 1, c);
+                    toggleLight(r + 1, c);
+                    toggleLight(r, c - 1);
+                    toggleLight(r, c + 1);
+                }
+            } while (checkWin());
+            
+            // Reset the move counter
+            moves = 0;
+            moveCounterElement.textContent = `Moves: ${moves}`;
+            
+            // Clear any win message and hide it
+            messageElement.textContent = '';
+            messageElement.classList.remove('visible');
+            renderBoard();
+        }
+
+        /**
+         * Initializes the game on page load.
+         */
+        window.onload = function() {
+            // Get DOM element references
+            boardElement = document.getElementById('board');
+            messageElement = document.getElementById('message');
+            moveCounterElement = document.getElementById('move-counter');
+            restartButton = document.getElementById('restartBtn');
+
+            // Populate the board with cell elements
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const cell = document.createElement('button');
+                    cell.id = `cell-${r}-${c}`;
+                    cell.classList.add('board-cell');
+                    cell.addEventListener('click', () => handleCellClick(r, c));
+                    boardElement.appendChild(cell);
+                }
+            }
+
+            // Set up the restart button click handler
+            restartButton.addEventListener('click', setupGame);
+            
+            // Start the first game
+            setupGame();
+        };
+    </script>
+</body>
+</html>
