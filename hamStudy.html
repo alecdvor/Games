@@ -409,14 +409,54 @@
                 correctAnswer: "C"
             },
             {
+                question: "Which symbol in the provided schematic represents a field effect transistor?",
+                options: [
+                    "Symbol 1",
+                    "Symbol 2",
+                    "Symbol 5",
+                    "Symbol 4"
+                ],
+                correctAnswer: "A"
+            },
+            {
+                question: "Which symbol in the provided schematic represents a Zener diode?",
+                options: [
+                    "Symbol 4",
+                    "Symbol 1",
+                    "Symbol 11",
+                    "Symbol 5"
+                ],
+                correctAnswer: "D"
+            },
+            {
                 question: "Which symbol in the provided schematic represents an NPN junction transistor?",
                 options: [
-                    "Symbol 1 (field effect transistor)",
-                    "Symbol 2 (NPN junction transistor)",
-                    "Symbol 7 (tapped inductor)",
-                    "Symbol 11 (resistor)"
+                    "Symbol 1",
+                    "Symbol 2",
+                    "Symbol 7",
+                    "Symbol 11"
                 ],
                 correctAnswer: "B"
+            },
+            {
+                question: "Which symbol in the provided schematic represents a solid core transformer?",
+                options: [
+                    "Symbol 4",
+                    "Symbol 7",
+                    "Symbol 6",
+                    "Symbol 1"
+                ],
+                correctAnswer: "C"
+            },
+            {
+                question: "Which symbol in the provided schematic represents a tapped inductor?",
+                options: [
+                    "Symbol 7",
+                    "Symbol 11",
+                    "Symbol 6",
+                    "Symbol 1"
+                ],
+                correctAnswer: "A"
             },
             {
                 question: "What circuit is used to select one of the sidebands from a balanced modulator?",
@@ -539,9 +579,12 @@
         function handleAnswerClick(clickedButton, question) {
             const allButtons = answersArea.querySelectorAll('.answer-button');
             const clickedAnswer = clickedButton.getAttribute('data-answer');
-            const correctOptionText = question.options[question.correctAnswer.charCodeAt(0) - 'A'.charCodeAt(0)];
+            
+            // Find the correct answer text
+            const correctOptionIndex = question.correctAnswer.charCodeAt(0) - 'A'.charCodeAt(0);
+            const correctOptionText = question.options[correctOptionIndex];
 
-            let isCorrect = clickedAnswer === correctOptionText;
+            const isCorrect = clickedAnswer === correctOptionText;
 
             allButtons.forEach(button => {
                 button.classList.add('disabled');
