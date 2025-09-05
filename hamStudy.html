@@ -139,408 +139,407 @@
 
         <button id="next-button" class="next-button hidden">Next Question</button>
 
-        <p class="text-xs text-gray-400 mt-4 text-center">Version: 0.0.4</p>
+        <p class="text-xs text-gray-400 mt-4 text-center">Version: 0.0.5</p>
     </div>
 
-    <script type="module">
-        console.log("Script starting...");
-
-        // Firebase is not needed for this single-player game, but these variables are required by the environment.
-        const __app_id = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const __firebase_config = typeof __firebase_config !== 'undefined' ? __firebase_config : '{}';
-        const __initial_auth_token = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : '';
-        const firebaseConfig = JSON.parse(__firebase_config);
-
-        const questionsData = [
-            {
-                question: "On which HF and/or MF amateur bands are there portions where General class licensees cannot transmit?",
-                options: [
-                    "60 meters, 30 meters, 17 meters, and 12 meters",
-                    "160 meters, 60 meters, 15 meters, and 12 meters",
-                    "80 meters, 40 meters, 20 meters, and 15 meters",
-                    "80 meters, 20 meters, 15 meters, and 10 meters"
-                ],
-                correctAnswer: "C"
-            },
-            {
-                question: "Which of the following applies when the FCC rules designate the amateur service as a secondary user on a band?",
-                options: [
-                    "Amateur stations must record the call sign of the primary service station before operating on a frequency assigned to that station",
-                    "Amateur stations may use the band only during emergencies",
-                    "Amateur stations must not cause harmful interference to primary users and must accept interference from primary users",
-                    "Amateur stations may only operate during specific hours of the day, while primary users are permitted 24-hour use of the band"
-                ],
-                correctAnswer: "C"
-            },
-            {
-                question: "What is the maximum transmitter power an amateur station may use on 10.140 MHz?",
-                options: [
-                    "200 watts PEP output",
-                    "1000 watts PEP output",
-                    "1500 watts PEP output",
-                    "2000 watts PEP output"
-                ],
-                correctAnswer: "A"
-            },
-            {
-                question: "How long is a Certificate of Successful Completion of Examination (CSCE) valid for exam element credit?",
-                options: [
-                    "30 days",
-                    "180 days",
-                    "365 days",
-                    "For as long as your current license is valid"
-                ],
-                correctAnswer: "C"
-            },
-            {
-                question: "The frequency allocations of which ITU region apply to radio amateurs operating in North and South America?",
-                options: [
-                    "Region 4",
-                    "Region 3",
-                    "Region 2",
-                    "Region 1"
-                ],
-                correctAnswer: "C"
-            },
-            {
-                question: "Why should an amateur operator normally avoid transmitting on 14.100, 18.110, 21.150, 24.930 and 28.200 MHz?",
-                options: [
-                    "A system of propagation beacon stations operates on those frequencies",
-                    "A system of automatic digital stations operates on those frequencies",
-                    "These frequencies are set aside for emergency operations",
-                    "These frequencies are set aside for bulletins from the FCC"
-                ],
-                correctAnswer: "A"
-            },
-            {
-                question: "Which mode is most commonly used for voice communications on frequencies of 14 MHz or higher?",
-                options: [
-                    "Upper sideband",
-                    "Lower sideband",
-                    "Suppressed sideband",
-                    "Double sideband"
-                ],
-                correctAnswer: "A"
-            },
-            {
-                question: "What is the first thing you should do if you are communicating with another amateur station and hear a station in distress break in?",
-                options: [
-                    "Inform your local emergency coordinator",
-                    "Acknowledge the station in distress and determine what assistance may be needed",
-                    "Immediately decrease power to avoid interfering with the station in distress",
-                    "Immediately cease all transmissions"
-                ],
-                correctAnswer: "B"
-            },
-            {
-                question: "What does the Q signal 'QRN' mean?",
-                options: [
-                    "Send more slowly",
-                    "Stop sending",
-                    "Zero beat my signal",
-                    "I am troubled by static"
-                ],
-                correctAnswer: "D"
-            },
-            {
-                question: "What is QRP operation?",
-                options: [
-                    "Remote piloted model control",
-                    "Low-power transmit operation",
-                    "Transmission using Quick Response Protocol",
-                    "Traffic relay procedure net operation"
-                ],
-                correctAnswer: "B"
-            },
-            {
-                question: "How does a higher sunspot number affect HF propagation?",
-                options: [
-                    "Higher sunspot numbers generally indicate a greater probability of good propagation at higher frequencies",
-                    "Lower sunspot numbers generally indicate greater probability of sporadic E propagation",
-                    "A zero sunspot number indicates that radio propagation is not possible on any band",
-                    "A zero sunspot number indicates undisturbed conditions"
-                ],
-                correctAnswer: "A"
-            },
-            {
-                question: "What is the solar flux index?",
-                options: [
-                    "A measure of the highest frequency that is useful for ionospheric propagation between two points on Earth",
-                    "A count of sunspots that is adjusted for solar emissions",
-                    "Another name for the American sunspot number",
-                    "A measure of solar radiation with a wavelength of 10.7 centimeters"
-                ],
-                correctAnswer: "D"
-            },
-            {
-                question: "How is long distance radio communication usually affected by the charged particles that reach Earth from solar coronal holes?",
-                options: [
-                    "HF communication is improved",
-                    "HF communication is disturbed",
-                    "VHF/UHF ducting is improved",
-                    "VHF/UHF ducting is disturbed"
-                ],
-                correctAnswer: "B"
-            },
-            {
-                question: "What is a characteristic of skywave signals arriving at your location by both short-path and long-path propagation?",
-                options: [
-                    "Periodic fading approximately every 10 seconds",
-                    "Signal strength increased by 3 dB",
-                    "The signal might be cancelled causing severe attenuation",
-                    "A slightly delayed echo might be heard"
-                ],
-                correctAnswer: "D"
-            },
-            {
-                question: "What is the approximate maximum distance along the Earth’s surface normally covered in one hop using the F2 region?",
-                options: [
-                    "180 miles",
-                    "1,200 miles",
-                    "2,500 miles",
-                    "12,000 miles"
-                ],
-                correctAnswer: "C"
-            },
-            {
-                question: "Why is long-distance communication on the 40-, 60-, 80-, and 160-meter bands more difficult during the day?",
-                options: [
-                    "The F region absorbs signals at these frequencies during daylight hours",
-                    "The F region is unstable during daylight hours",
-                    "The D region absorbs signals at these frequencies during daylight hours",
-                    "The E region is unstable during daylight hours"
-                ],
-                correctAnswer: "C"
-            },
-            {
-                question: "What is the purpose of the notch filter found on many HF transceivers?",
-                options: [
-                    "To restrict the transmitter voice bandwidth",
-                    "To reduce interference from carriers in the receiver passband",
-                    "To eliminate receiver interference from impulse noise sources",
-                    "To remove interfering splatter generated by signals on adjacent frequencies"
-                ],
-                correctAnswer: "B"
-            },
-            {
-                question: "What is the purpose of using a receive attenuator?",
-                options: [
-                    "To prevent receiver overload from strong incoming signals",
-                    "To reduce the transmitter power when driving a linear amplifier",
-                    "To reduce power consumption when operating from batteries",
-                    "To reduce excessive audio level on strong signals"
-                ],
-                correctAnswer: "A"
-            },
-            {
-                question: "What item of test equipment contains horizontal and vertical channel amplifiers?",
-                options: [
-                    "An ohmmeter",
-                    "A signal generator",
-                    "An ammeter",
-                    "An oscilloscope"
-                ],
-                correctAnswer: "D"
-            },
-            {
-                question: "What is a possible cause of high voltages that produce RF burns?",
-                options: [
-                    "Flat braid rather than round wire has been used for the ground wire",
-                    "Insulated wire has been used for the ground wire",
-                    "The ground rod is resonant",
-                    "The ground wire has high impedance on that frequency"
-                ],
-                correctAnswer: "D"
-            },
-            {
-                question: "How does a signal that reads 20 dB over S9 compare to one that reads S9 on a receiver, assuming a properly calibrated S meter?",
-                options: [
-                    "It is 10 times less powerful",
-                    "It is 20 times less powerful",
-                    "It is 20 times more powerful",
-                    "It is 100 times more powerful"
-                ],
-                correctAnswer: "D"
-            },
-            {
-                question: "Why should DC power for a 100-watt HF transceiver not be supplied by a vehicle’s auxiliary power socket?",
-                options: [
-                    "The socket is not wired with an RF-shielded power cable",
-                    "The socket’s wiring may be inadequate for the current drawn by the transceiver",
-                    "The DC polarity of the socket is reversed from the polarity of modern HF transceivers",
-                    "Drawing more than 50 watts from this socket could cause the engine to overheat"
-                ],
-                correctAnswer: "B"
-            },
-            {
-                question: "What happens when inductive and capacitive reactance are equal in a series LC circuit?",
-                options: [
-                    "Resonance causes impedance to be very high",
-                    "Impedance is equal to the geometric mean of the inductance and capacitance",
-                    "Resonance causes impedance to be very low",
-                    "Impedance is equal to the arithmetic mean of the inductance and capacitance"
-                ],
-                correctAnswer: "C"
-            },
-            {
-                question: "What is the PEP produced by 200 volts peak-to-peak across a 50-ohm dummy load?",
-                options: [
-                    "1.4 watts",
-                    "100 watts",
-                    "353.5 watts",
-                    "400 watts"
-                ],
-                correctAnswer: "B"
-            },
-            {
-                question: "What is the voltage output of a transformer with a 500-turn primary and a 1500-turn secondary when 120 VAC is applied to the primary?",
-                options: [
-                    "360 volts",
-                    "120 volts",
-                    "40 volts",
-                    "25.5 volts"
-                ],
-                correctAnswer: "A"
-            },
-            {
-                question: "Which of the following is characteristic of an electrolytic capacitor?",
-                options: [
-                    "Tight tolerance",
-                    "Much less leakage than any other type",
-                    "High capacitance for a given volume",
-                    "Inexpensive RF capacitor"
-                ],
-                correctAnswer: "C"
-            },
-            {
-                question: "Which symbol in the provided schematic represents a field effect transistor?",
-                options: [
-                    "Symbol 1",
-                    "Symbol 2",
-                    "Symbol 5",
-                    "Symbol 4"
-                ],
-                correctAnswer: "A"
-            },
-            {
-                question: "Which symbol in the provided schematic represents a Zener diode?",
-                options: [
-                    "Symbol 4",
-                    "Symbol 1",
-                    "Symbol 11",
-                    "Symbol 5"
-                ],
-                correctAnswer: "D"
-            },
-            {
-                question: "Which symbol in the provided schematic represents an NPN junction transistor?",
-                options: [
-                    "Symbol 1",
-                    "Symbol 2",
-                    "Symbol 7",
-                    "Symbol 11"
-                ],
-                correctAnswer: "B"
-            },
-            {
-                question: "Which symbol in the provided schematic represents a solid core transformer?",
-                options: [
-                    "Symbol 4",
-                    "Symbol 7",
-                    "Symbol 6",
-                    "Symbol 1"
-                ],
-                correctAnswer: "C"
-            },
-            {
-                question: "Which symbol in the provided schematic represents a tapped inductor?",
-                options: [
-                    "Symbol 7",
-                    "Symbol 11",
-                    "Symbol 6",
-                    "Symbol 1"
-                ],
-                correctAnswer: "A"
-            },
-            {
-                question: "What circuit is used to select one of the sidebands from a balanced modulator?",
-                options: [
-                    "Carrier oscillator",
-                    "Filter",
-                    "IF amplifier",
-                    "RF amplifier"
-                ],
-                correctAnswer: "B"
-            },
-            {
-                question: "What is the name of the process that changes the instantaneous frequency of an RF wave to convey information?",
-                options: [
-                    "Frequency convolution",
-                    "Frequency transformation",
-                    "Frequency conversion",
-                    "Frequency modulation"
-                ],
-                correctAnswer: "D"
-            },
-            {
-                question: "How does the attenuation of coaxial cable change with increasing frequency?",
-                options: [
-                    "Attenuation is independent of frequency",
-                    "Attenuation increases",
-                    "Attenuation decreases",
-                    "Attenuation follows Marconi’s Law of Attenuation"
-                ],
-                correctAnswer: "B"
-            },
-            {
-                question: "What is the approximate length for a 1/2 wave dipole antenna cut for 14.250 MHz?",
-                options: [
-                    "8 feet",
-                    "16 feet",
-                    "24 feet",
-                    "33 feet"
-                ],
-                correctAnswer: "D"
-            },
-            {
-                question: "What is the primary effect of increasing boom length and adding directors to a Yagi antenna?",
-                options: [
-                    "Gain increases",
-                    "Beamwidth increases",
-                    "Front-to-back ratio decreases",
-                    "Resonant frequency is lower"
-                ],
-                correctAnswer: "A"
-            },
-            {
-                question: "What is one way that RF energy can affect human body tissue?",
-                options: [
-                    "It heats body tissue",
-                    "It causes radiation poisoning",
-                    "It causes the blood count to reach a dangerously low level",
-                    "It cools body tissue"
-                ],
-                correctAnswer: "A"
-            },
-            {
-                question: "Which of the following is true of an emergency generator installation?",
-                options: [
-                    "The generator should be operated in a well-ventilated area",
-                    "The generator must be insulated from ground",
-                    "Fuel should be stored near the generator for rapid refueling in case of an emergency",
-                    "All these choices are correct"
-                ],
-                correctAnswer: "A"
-            }
-        ];
-
-        let questions = [];
-        let currentQuestionIndex = 0;
-        let score = 0;
-        let streak = 0;
-
-        // Function to start the game
+    <script>
+        // Use a standard script tag and an explicit function call to ensure
+        // all elements are rendered before the script runs.
         function startGame() {
+            // Firebase variables are part of the platform environment and must remain.
+            const __app_id = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            const __firebase_config = typeof __firebase_config !== 'undefined' ? __firebase_config : '{}';
+            const __initial_auth_token = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : '';
+            const firebaseConfig = JSON.parse(__firebase_config);
+
+            const questionsData = [
+                {
+                    question: "On which HF and/or MF amateur bands are there portions where General class licensees cannot transmit?",
+                    options: [
+                        "60 meters, 30 meters, 17 meters, and 12 meters",
+                        "160 meters, 60 meters, 15 meters, and 12 meters",
+                        "80 meters, 40 meters, 20 meters, and 15 meters",
+                        "80 meters, 20 meters, 15 meters, and 10 meters"
+                    ],
+                    correctAnswer: "C"
+                },
+                {
+                    question: "Which of the following applies when the FCC rules designate the amateur service as a secondary user on a band?",
+                    options: [
+                        "Amateur stations must record the call sign of the primary service station before operating on a frequency assigned to that station",
+                        "Amateur stations may use the band only during emergencies",
+                        "Amateur stations must not cause harmful interference to primary users and must accept interference from primary users",
+                        "Amateur stations may only operate during specific hours of the day, while primary users are permitted 24-hour use of the band"
+                    ],
+                    correctAnswer: "C"
+                },
+                {
+                    question: "What is the maximum transmitter power an amateur station may use on 10.140 MHz?",
+                    options: [
+                        "200 watts PEP output",
+                        "1000 watts PEP output",
+                        "1500 watts PEP output",
+                        "2000 watts PEP output"
+                    ],
+                    correctAnswer: "A"
+                },
+                {
+                    question: "How long is a Certificate of Successful Completion of Examination (CSCE) valid for exam element credit?",
+                    options: [
+                        "30 days",
+                        "180 days",
+                        "365 days",
+                        "For as long as your current license is valid"
+                    ],
+                    correctAnswer: "C"
+                },
+                {
+                    question: "The frequency allocations of which ITU region apply to radio amateurs operating in North and South America?",
+                    options: [
+                        "Region 4",
+                        "Region 3",
+                        "Region 2",
+                        "Region 1"
+                    ],
+                    correctAnswer: "C"
+                },
+                {
+                    question: "Why should an amateur operator normally avoid transmitting on 14.100, 18.110, 21.150, 24.930 and 28.200 MHz?",
+                    options: [
+                        "A system of propagation beacon stations operates on those frequencies",
+                        "A system of automatic digital stations operates on those frequencies",
+                        "These frequencies are set aside for emergency operations",
+                        "These frequencies are set aside for bulletins from the FCC"
+                    ],
+                    correctAnswer: "A"
+                },
+                {
+                    question: "Which mode is most commonly used for voice communications on frequencies of 14 MHz or higher?",
+                    options: [
+                        "Upper sideband",
+                        "Lower sideband",
+                        "Suppressed sideband",
+                        "Double sideband"
+                    ],
+                    correctAnswer: "A"
+                },
+                {
+                    question: "What is the first thing you should do if you are communicating with another amateur station and hear a station in distress break in?",
+                    options: [
+                        "Inform your local emergency coordinator",
+                        "Acknowledge the station in distress and determine what assistance may be needed",
+                        "Immediately decrease power to avoid interfering with the station in distress",
+                        "Immediately cease all transmissions"
+                    ],
+                    correctAnswer: "B"
+                },
+                {
+                    question: "What does the Q signal 'QRN' mean?",
+                    options: [
+                        "Send more slowly",
+                        "Stop sending",
+                        "Zero beat my signal",
+                        "I am troubled by static"
+                    ],
+                    correctAnswer: "D"
+                },
+                {
+                    question: "What is QRP operation?",
+                    options: [
+                        "Remote piloted model control",
+                        "Low-power transmit operation",
+                        "Transmission using Quick Response Protocol",
+                        "Traffic relay procedure net operation"
+                    ],
+                    correctAnswer: "B"
+                },
+                {
+                    question: "How does a higher sunspot number affect HF propagation?",
+                    options: [
+                        "Higher sunspot numbers generally indicate a greater probability of good propagation at higher frequencies",
+                        "Lower sunspot numbers generally indicate greater probability of sporadic E propagation",
+                        "A zero sunspot number indicates that radio propagation is not possible on any band",
+                        "A zero sunspot number indicates undisturbed conditions"
+                    ],
+                    correctAnswer: "A"
+                },
+                {
+                    question: "What is the solar flux index?",
+                    options: [
+                        "A measure of the highest frequency that is useful for ionospheric propagation between two points on Earth",
+                        "A count of sunspots that is adjusted for solar emissions",
+                        "Another name for the American sunspot number",
+                        "A measure of solar radiation with a wavelength of 10.7 centimeters"
+                    ],
+                    correctAnswer: "D"
+                },
+                {
+                    question: "How is long distance radio communication usually affected by the charged particles that reach Earth from solar coronal holes?",
+                    options: [
+                        "HF communication is improved",
+                        "HF communication is disturbed",
+                        "VHF/UHF ducting is improved",
+                        "VHF/UHF ducting is disturbed"
+                    ],
+                    correctAnswer: "B"
+                },
+                {
+                    question: "What is a characteristic of skywave signals arriving at your location by both short-path and long-path propagation?",
+                    options: [
+                        "Periodic fading approximately every 10 seconds",
+                        "Signal strength increased by 3 dB",
+                        "The signal might be cancelled causing severe attenuation",
+                        "A slightly delayed echo might be heard"
+                    ],
+                    correctAnswer: "D"
+                },
+                {
+                    question: "What is the approximate maximum distance along the Earth’s surface normally covered in one hop using the F2 region?",
+                    options: [
+                        "180 miles",
+                        "1,200 miles",
+                        "2,500 miles",
+                        "12,000 miles"
+                    ],
+                    correctAnswer: "C"
+                },
+                {
+                    question: "Why is long-distance communication on the 40-, 60-, 80-, and 160-meter bands more difficult during the day?",
+                    options: [
+                        "The F region absorbs signals at these frequencies during daylight hours",
+                        "The F region is unstable during daylight hours",
+                        "The D region absorbs signals at these frequencies during daylight hours",
+                        "The E region is unstable during daylight hours"
+                    ],
+                    correctAnswer: "C"
+                },
+                {
+                    question: "What is the purpose of the notch filter found on many HF transceivers?",
+                    options: [
+                        "To restrict the transmitter voice bandwidth",
+                        "To reduce interference from carriers in the receiver passband",
+                        "To eliminate receiver interference from impulse noise sources",
+                        "To remove interfering splatter generated by signals on adjacent frequencies"
+                    ],
+                    correctAnswer: "B"
+                },
+                {
+                    question: "What is the purpose of using a receive attenuator?",
+                    options: [
+                        "To prevent receiver overload from strong incoming signals",
+                        "To reduce the transmitter power when driving a linear amplifier",
+                        "To reduce power consumption when operating from batteries",
+                        "To reduce excessive audio level on strong signals"
+                    ],
+                    correctAnswer: "A"
+                },
+                {
+                    question: "What item of test equipment contains horizontal and vertical channel amplifiers?",
+                    options: [
+                        "An ohmmeter",
+                        "A signal generator",
+                        "An ammeter",
+                        "An oscilloscope"
+                    ],
+                    correctAnswer: "D"
+                },
+                {
+                    question: "What is a possible cause of high voltages that produce RF burns?",
+                    options: [
+                        "Flat braid rather than round wire has been used for the ground wire",
+                        "Insulated wire has been used for the ground wire",
+                        "The ground rod is resonant",
+                        "The ground wire has high impedance on that frequency"
+                    ],
+                    correctAnswer: "D"
+                },
+                {
+                    question: "How does a signal that reads 20 dB over S9 compare to one that reads S9 on a receiver, assuming a properly calibrated S meter?",
+                    options: [
+                        "It is 10 times less powerful",
+                        "It is 20 times less powerful",
+                        "It is 20 times more powerful",
+                        "It is 100 times more powerful"
+                    ],
+                    correctAnswer: "D"
+                },
+                {
+                    question: "Why should DC power for a 100-watt HF transceiver not be supplied by a vehicle’s auxiliary power socket?",
+                    options: [
+                        "The socket is not wired with an RF-shielded power cable",
+                        "The socket’s wiring may be inadequate for the current drawn by the transceiver",
+                        "The DC polarity of the socket is reversed from the polarity of modern HF transceivers",
+                        "Drawing more than 50 watts from this socket could cause the engine to overheat"
+                    ],
+                    correctAnswer: "B"
+                },
+                {
+                    question: "What happens when inductive and capacitive reactance are equal in a series LC circuit?",
+                    options: [
+                        "Resonance causes impedance to be very high",
+                        "Impedance is equal to the geometric mean of the inductance and capacitance",
+                        "Resonance causes impedance to be very low",
+                        "Impedance is equal to the arithmetic mean of the inductance and capacitance"
+                    ],
+                    correctAnswer: "C"
+                },
+                {
+                    question: "What is the PEP produced by 200 volts peak-to-peak across a 50-ohm dummy load?",
+                    options: [
+                        "1.4 watts",
+                        "100 watts",
+                        "353.5 watts",
+                        "400 watts"
+                    ],
+                    correctAnswer: "B"
+                },
+                {
+                    question: "What is the voltage output of a transformer with a 500-turn primary and a 1500-turn secondary when 120 VAC is applied to the primary?",
+                    options: [
+                        "360 volts",
+                        "120 volts",
+                        "40 volts",
+                        "25.5 volts"
+                    ],
+                    correctAnswer: "A"
+                },
+                {
+                    question: "Which of the following is characteristic of an electrolytic capacitor?",
+                    options: [
+                        "Tight tolerance",
+                        "Much less leakage than any other type",
+                        "High capacitance for a given volume",
+                        "Inexpensive RF capacitor"
+                    ],
+                    correctAnswer: "C"
+                },
+                {
+                    question: "Which symbol in the provided schematic represents a field effect transistor?",
+                    options: [
+                        "Symbol 1",
+                        "Symbol 2",
+                        "Symbol 5",
+                        "Symbol 4"
+                    ],
+                    correctAnswer: "A"
+                },
+                {
+                    question: "Which symbol in the provided schematic represents a Zener diode?",
+                    options: [
+                        "Symbol 4",
+                        "Symbol 1",
+                        "Symbol 11",
+                        "Symbol 5"
+                    ],
+                    correctAnswer: "D"
+                },
+                {
+                    question: "Which symbol in the provided schematic represents an NPN junction transistor?",
+                    options: [
+                        "Symbol 1",
+                        "Symbol 2",
+                        "Symbol 7",
+                        "Symbol 11"
+                    ],
+                    correctAnswer: "B"
+                },
+                {
+                    question: "Which symbol in the provided schematic represents a solid core transformer?",
+                    options: [
+                        "Symbol 4",
+                        "Symbol 7",
+                        "Symbol 6",
+                        "Symbol 1"
+                    ],
+                    correctAnswer: "C"
+                },
+                {
+                    question: "Which symbol in the provided schematic represents a tapped inductor?",
+                    options: [
+                        "Symbol 7",
+                        "Symbol 11",
+                        "Symbol 6",
+                        "Symbol 1"
+                    ],
+                    correctAnswer: "A"
+                },
+                {
+                    question: "What circuit is used to select one of the sidebands from a balanced modulator?",
+                    options: [
+                        "Carrier oscillator",
+                        "Filter",
+                        "IF amplifier",
+                        "RF amplifier"
+                    ],
+                    correctAnswer: "B"
+                },
+                {
+                    question: "What is the name of the process that changes the instantaneous frequency of an RF wave to convey information?",
+                    options: [
+                        "Frequency convolution",
+                        "Frequency transformation",
+                        "Frequency conversion",
+                        "Frequency modulation"
+                    ],
+                    correctAnswer: "D"
+                },
+                {
+                    question: "How does the attenuation of coaxial cable change with increasing frequency?",
+                    options: [
+                        "Attenuation is independent of frequency",
+                        "Attenuation increases",
+                        "Attenuation decreases",
+                        "Attenuation follows Marconi’s Law of Attenuation"
+                    ],
+                    correctAnswer: "B"
+                },
+                {
+                    question: "What is the approximate length for a 1/2 wave dipole antenna cut for 14.250 MHz?",
+                    options: [
+                        "8 feet",
+                        "16 feet",
+                        "24 feet",
+                        "33 feet"
+                    ],
+                    correctAnswer: "D"
+                },
+                {
+                    question: "What is the primary effect of increasing boom length and adding directors to a Yagi antenna?",
+                    options: [
+                        "Gain increases",
+                        "Beamwidth increases",
+                        "Front-to-back ratio decreases",
+                        "Resonant frequency is lower"
+                    ],
+                    correctAnswer: "A"
+                },
+                {
+                    question: "What is one way that RF energy can affect human body tissue?",
+                    options: [
+                        "It heats body tissue",
+                        "It causes radiation poisoning",
+                        "It causes the blood count to reach a dangerously low level",
+                        "It cools body tissue"
+                    ],
+                    correctAnswer: "A"
+                },
+                {
+                    question: "Which of the following is true of an emergency generator installation?",
+                    options: [
+                        "The generator should be operated in a well-ventilated area",
+                        "The generator must be insulated from ground",
+                        "Fuel should be stored near the generator for rapid refueling in case of an emergency",
+                        "All these choices are correct"
+                    ],
+                    correctAnswer: "A"
+                }
+            ];
+
+            let questions = [];
+            let currentQuestionIndex = 0;
+            let score = 0;
+            let streak = 0;
+
             const questionArea = document.getElementById('question-area');
             const answersArea = document.getElementById('answers-area');
             const feedbackArea = document.getElementById('feedback-area');
@@ -644,8 +643,8 @@
             resetGame();
         }
 
-        // Start the game when the window is fully loaded
-        window.onload = startGame;
+        // Call the startGame function immediately after this script block is parsed
+        startGame();
     </script>
 </body>
 </html>
