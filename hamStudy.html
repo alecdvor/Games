@@ -139,10 +139,12 @@
 
         <button id="next-button" class="next-button hidden">Next Question</button>
 
-        <p class="text-xs text-gray-400 mt-4 text-center">Version: 0.0.1</p>
+        <p class="text-xs text-gray-400 mt-4 text-center">Version: 0.0.2</p>
     </div>
 
     <script type="module">
+        console.log("Script starting...");
+
         // Firebase is not needed for this single-player game, but these variables are required by the environment.
         const __app_id = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const __firebase_config = typeof __firebase_config !== 'undefined' ? __firebase_config : '{}';
@@ -637,10 +639,9 @@
         }
 
         nextButton.addEventListener('click', nextQuestion);
-
-        document.addEventListener('DOMContentLoaded', () => {
-            resetGame();
-        });
+        
+        // This is a more direct way to start the game after the script has loaded.
+        resetGame();
     </script>
 </body>
 </html>
