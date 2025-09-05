@@ -1794,9 +1794,4 @@ const questionData = [
         },
         correct: "B"
     },
-    {
-        question: "Which of the following can be measured with an antenna analyzer?",
-        answers: {
-            A: "Front-to-back ratio of an antenna",
-            B: "Power output from a transmitter",
-            C: "Im
+   ];
