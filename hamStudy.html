@@ -3,648 +3,403 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FCC General Class Exam Study Game</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <title>General Class Exam Study Game</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
     <style>
         body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #333;
+            color: #fff;
             font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            min-height: 100vh;
-            padding: 2rem;
         }
-        .game-container {
-            max-width: 800px;
-            width: 100%;
-            background-color: #ffffff;
-            border-radius: 1rem;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            padding: 2rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
+        #game-container {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
         }
-        .game-header {
-            text-align: center;
-        }
-        .question-box {
-            min-height: 100px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: #e5e7eb;
-            border-radius: 0.75rem;
-            padding: 1.5rem;
-            text-align: center;
-            font-size: 1.125rem;
-            font-weight: 500;
-        }
-        .answer-button {
-            width: 100%;
-            text-align: left;
-            padding: 1rem 1.5rem;
-            border-radius: 0.75rem;
-            background-color: #f9fafb;
-            transition: background-color 0.2s, transform 0.1s;
-            cursor: pointer;
-            border: 1px solid #e5e7eb;
-            font-size: 1rem;
-            font-weight: 500;
-        }
-        .answer-button:hover:not(.disabled) {
-            background-color: #eef2ff;
-        }
-        .answer-button:active:not(.disabled) {
-            transform: scale(0.98);
-        }
-        .answer-button.correct {
-            background-color: #d1fae5;
-            border-color: #10b981;
-            font-weight: 700;
-            color: #065f46;
-        }
-        .answer-button.incorrect {
-            background-color: #fee2e2;
-            border-color: #ef4444;
-            font-weight: 700;
-            color: #991b1b;
-        }
-        .answer-button.disabled {
-            cursor: not-allowed;
-            opacity: 0.8;
-        }
-        .next-button {
-            width: 100%;
-            padding: 1rem 1.5rem;
-            background-color: #4f46e5;
-            color: white;
-            font-weight: 700;
-            border-radius: 0.75rem;
-            text-align: center;
-            cursor: pointer;
-            transition: background-color 0.2s, transform 0.1s;
-        }
-        .next-button:hover {
-            background-color: #4338ca;
-        }
-        .next-button:active {
-            transform: scale(0.98);
-        }
-        .feedback {
-            min-height: 3rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            text-align: center;
-        }
-        .feedback.correct {
-            color: #10b981;
-        }
-        .feedback.incorrect {
-            color: #ef4444;
+        /* A simple pre-game loader text style */
+        #loading-text {
+            font-size: 24px;
+            color: #ddd;
         }
     </style>
 </head>
 <body>
-    <div class="game-container">
-        <div class="game-header">
-            <h1 class="text-3xl font-bold text-gray-900 mb-2">FCC General Class Study</h1>
-            <p class="text-sm text-gray-500">How many can you get right in a row?</p>
-        </div>
-
-        <div class="flex justify-between items-center mb-4">
-            <div class="text-sm font-medium text-gray-600">
-                Score: <span id="score" class="font-bold text-gray-900">0</span>
-            </div>
-            <div class="text-sm font-medium text-gray-600">
-                Correct in a row: <span id="streak" class="font-bold text-gray-900">0</span>
-            </div>
-        </div>
-
-        <div id="question-area" class="question-box">
-            Loading question...
-        </div>
-
-        <div id="answers-area" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <!-- Answer buttons will be injected here by JavaScript -->
-        </div>
-
-        <div id="feedback-area" class="feedback"></div>
-
-        <button id="next-button" class="next-button hidden">Next Question</button>
-
-        <p class="text-xs text-gray-400 mt-4 text-center">Version: 0.0.7</p>
+    <div id="game-container">
+        <div id="loading-text">Loading Game...</div>
     </div>
 
     <script>
-        // The game logic is now wrapped in a function that is guaranteed to be called
-        // only after the entire document has been parsed and loaded.
-        function startGame() {
-            // Firebase variables are part of the platform environment and must remain.
-            const __app_id = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-            const __firebase_config = typeof __firebase_config !== 'undefined' ? __firebase_config : '{}';
-            const __initial_auth_token = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : '';
-            const firebaseConfig = JSON.parse(__firebase_config);
-            
-            const questionsData = [
-                {
-                    question: "On which HF and/or MF amateur bands are there portions where General class licensees cannot transmit?",
-                    options: [
-                        "60 meters, 30 meters, 17 meters, and 12 meters",
-                        "160 meters, 60 meters, 15 meters, and 12 meters",
-                        "80 meters, 40 meters, 20 meters, and 15 meters",
-                        "80 meters, 20 meters, 15 meters, and 10 meters"
-                    ],
-                    correctAnswer: "C"
+        // --- Question Data ---
+        // I've parsed a sample of questions from your document.
+        const questionData = [
+            {
+                question: "On which HF and/or MF amateur bands are there portions where General class licensees cannot transmit?",
+                answers: {
+                    A: "60 meters, 30 meters, 17 meters, and 12 meters",
+                    B: "160 meters, 60 meters, 15 meters, and 12 meters",
+                    C: "80 meters, 40 meters, 20 meters, and 15 meters",
+                    D: "80 meters, 20 meters, 15 meters, and 10 meters"
                 },
-                {
-                    question: "Which of the following applies when the FCC rules designate the amateur service as a secondary user on a band?",
-                    options: [
-                        "Amateur stations must record the call sign of the primary service station before operating on a frequency assigned to that station",
-                        "Amateur stations may use the band only during emergencies",
-                        "Amateur stations must not cause harmful interference to primary users and must accept interference from primary users",
-                        "Amateur stations may only operate during specific hours of the day, while primary users are permitted 24-hour use of the band"
-                    ],
-                    correctAnswer: "C"
+                correct: "C"
+            },
+            {
+                question: "What is the maximum height above ground for an antenna structure not near a public use airport without requiring notification to the FAA and registration with the FCC?",
+                answers: {
+                    A: "50 feet",
+                    B: "100 feet",
+                    C: "200 feet",
+                    D: "250 feet"
                 },
-                {
-                    question: "What is the maximum transmitter power an amateur station may use on 10.140 MHz?",
-                    options: [
-                        "200 watts PEP output",
-                        "1000 watts PEP output",
-                        "1500 watts PEP output",
-                        "2000 watts PEP output"
-                    ],
-                    correctAnswer: "A"
+                correct: "C"
+            },
+            {
+                question: "What is the maximum transmitter power an amateur station may use on 10.140 MHz?",
+                answers: {
+                    A: "200 watts PEP output",
+                    B: "1000 watts PEP output",
+                    C: "1500 watts PEP output",
+                    D: "2000 watts PEP output"
                 },
-                {
-                    question: "How long is a Certificate of Successful Completion of Examination (CSCE) valid for exam element credit?",
-                    options: [
-                        "30 days",
-                        "180 days",
-                        "365 days",
-                        "For as long as your current license is valid"
-                    ],
-                    correctAnswer: "C"
+                correct: "A"
+            },
+            {
+                question: "Which mode is most commonly used for voice communications on frequencies of 14 MHz or higher?",
+                answers: {
+                    A: "Upper sideband",
+                    B: "Lower sideband",
+                    C: "Suppressed sideband",
+                    D: "Double sideband"
                 },
-                {
-                    question: "The frequency allocations of which ITU region apply to radio amateurs operating in North and South America?",
-                    options: [
-                        "Region 4",
-                        "Region 3",
-                        "Region 2",
-                        "Region 1"
-                    ],
-                    correctAnswer: "C"
+                correct: "A"
+            },
+             {
+                question: "How does a higher sunspot number affect HF propagation?",
+                answers: {
+                    A: "Higher sunspot numbers generally indicate a greater probability of good propagation at higher frequencies",
+                    B: "Lower sunspot numbers generally indicate greater probability of sporadic E propagation",
+                    C: "A zero sunspot number indicates that radio propagation is not possible on any band",
+                    D: "A zero sunspot number indicates undisturbed conditions"
                 },
-                {
-                    question: "Why should an amateur operator normally avoid transmitting on 14.100, 18.110, 21.150, 24.930 and 28.200 MHz?",
-                    options: [
-                        "A system of propagation beacon stations operates on those frequencies",
-                        "A system of automatic digital stations operates on those frequencies",
-                        "These frequencies are set aside for emergency operations",
-                        "These frequencies are set aside for bulletins from the FCC"
-                    ],
-                    correctAnswer: "A"
+                correct: "A"
+            },
+            {
+                question: "What is the purpose of the notch filter found on many HF transceivers?",
+                answers: {
+                    A: "To restrict the transmitter voice bandwidth",
+                    B: "To reduce interference from carriers in the receiver passband",
+                    C: "To eliminate receiver interference from impulse noise sources",
+                    D: "To remove interfering splatter generated by signals on adjacent frequencies"
                 },
-                {
-                    question: "Which mode is most commonly used for voice communications on frequencies of 14 MHz or higher?",
-                    options: [
-                        "Upper sideband",
-                        "Lower sideband",
-                        "Suppressed sideband",
-                        "Double sideband"
-                    ],
-                    correctAnswer: "A"
+                correct: "B"
+            },
+            {
+                question: "What happens when inductive and capacitive reactance are equal in a series LC circuit?",
+                answers: {
+                    A: "Resonance causes impedance to be very high",
+                    B: "Impedance is equal to the geometric mean of the inductance and capacitance",
+                    C: "Resonance causes impedance to be very low",
+                    D: "Impedance is equal to the arithmetic mean of the inductance and capacitance"
                 },
-                {
-                    question: "What is the first thing you should do if you are communicating with another amateur station and hear a station in distress break in?",
-                    options: [
-                        "Inform your local emergency coordinator",
-                        "Acknowledge the station in distress and determine what assistance may be needed",
-                        "Immediately decrease power to avoid interfering with the station in distress",
-                        "Immediately cease all transmissions"
-                    ],
-                    correctAnswer: "B"
+                correct: "C"
+            },
+            {
+                question: "What dB change represents a factor of two increase or decrease in power?",
+                answers: {
+                    A: "Approximately 2 dB",
+                    B: "Approximately 3 dB",
+                    C: "Approximately 6 dB",
+                    D: "Approximately 9 dB"
                 },
-                {
-                    question: "What does the Q signal 'QRN' mean?",
-                    options: [
-                        "Send more slowly",
-                        "Stop sending",
-                        "Zero beat my signal",
-                        "I am troubled by static"
-                    ],
-                    correctAnswer: "D"
+                correct: "B"
+            },
+            {
+                question: "What is the minimum allowable discharge voltage for maximum life of a standard 12-volt lead-acid battery?",
+                answers: {
+                    A: "6 volts",
+                    B: "8.5 volts",
+                    C: "10.5 volts",
+                    D: "12 volts"
                 },
-                {
-                    question: "What is QRP operation?",
-                    options: [
-                        "Remote piloted model control",
-                        "Low-power transmit operation",
-                        "Transmission using Quick Response Protocol",
-                        "Traffic relay procedure net operation"
-                    ],
-                    correctAnswer: "B"
+                correct: "C"
+            },
+            {
+                question: "What is one way that RF energy can affect human body tissue?",
+                answers: {
+                    A: "It heats body tissue",
+                    B: "It causes radiation poisoning",
+                    C: "It causes the blood count to reach a dangerously low level",
+                    D: "It cools body tissue"
                 },
-                {
-                    question: "How does a higher sunspot number affect HF propagation?",
-                    options: [
-                        "Higher sunspot numbers generally indicate a greater probability of good propagation at higher frequencies",
-                        "Lower sunspot numbers generally indicate greater probability of sporadic E propagation",
-                        "A zero sunspot number indicates that radio propagation is not possible on any band",
-                        "A zero sunspot number indicates undisturbed conditions"
-                    ],
-                    correctAnswer: "A"
-                },
-                {
-                    question: "What is the solar flux index?",
-                    options: [
-                        "A measure of the highest frequency that is useful for ionospheric propagation between two points on Earth",
-                        "A count of sunspots that is adjusted for solar emissions",
-                        "Another name for the American sunspot number",
-                        "A measure of solar radiation with a wavelength of 10.7 centimeters"
-                    ],
-                    correctAnswer: "D"
-                },
-                {
-                    question: "How is long distance radio communication usually affected by the charged particles that reach Earth from solar coronal holes?",
-                    options: [
-                        "HF communication is improved",
-                        "HF communication is disturbed",
-                        "VHF/UHF ducting is improved",
-                        "VHF/UHF ducting is disturbed"
-                    ],
-                    correctAnswer: "B"
-                },
-                {
-                    question: "What is a characteristic of skywave signals arriving at your location by both short-path and long-path propagation?",
-                    options: [
-                        "Periodic fading approximately every 10 seconds",
-                        "Signal strength increased by 3 dB",
-                        "The signal might be cancelled causing severe attenuation",
-                        "A slightly delayed echo might be heard"
-                    ],
-                    correctAnswer: "D"
-                },
-                {
-                    question: "What is the approximate maximum distance along the Earth’s surface normally covered in one hop using the F2 region?",
-                    options: [
-                        "180 miles",
-                        "1,200 miles",
-                        "2,500 miles",
-                        "12,000 miles"
-                    ],
-                    correctAnswer: "C"
-                },
-                {
-                    question: "Why is long-distance communication on the 40-, 60-, 80-, and 160-meter bands more difficult during the day?",
-                    options: [
-                        "The F region absorbs signals at these frequencies during daylight hours",
-                        "The F region is unstable during daylight hours",
-                        "The D region absorbs signals at these frequencies during daylight hours",
-                        "The E region is unstable during daylight hours"
-                    ],
-                    correctAnswer: "C"
-                },
-                {
-                    question: "What is the purpose of the notch filter found on many HF transceivers?",
-                    options: [
-                        "To restrict the transmitter voice bandwidth",
-                        "To reduce interference from carriers in the receiver passband",
-                        "To eliminate receiver interference from impulse noise sources",
-                        "To remove interfering splatter generated by signals on adjacent frequencies"
-                    ],
-                    correctAnswer: "B"
-                },
-                {
-                    question: "What is the purpose of using a receive attenuator?",
-                    options: [
-                        "To prevent receiver overload from strong incoming signals",
-                        "To reduce the transmitter power when driving a linear amplifier",
-                        "To reduce power consumption when operating from batteries",
-                        "To reduce excessive audio level on strong signals"
-                    ],
-                    correctAnswer: "A"
-                },
-                {
-                    question: "What item of test equipment contains horizontal and vertical channel amplifiers?",
-                    options: [
-                        "An ohmmeter",
-                        "A signal generator",
-                        "An ammeter",
-                        "An oscilloscope"
-                    ],
-                    correctAnswer: "D"
-                },
-                {
-                    question: "What is a possible cause of high voltages that produce RF burns?",
-                    options: [
-                        "Flat braid rather than round wire has been used for the ground wire",
-                        "Insulated wire has been used for the ground wire",
-                        "The ground rod is resonant",
-                        "The ground wire has high impedance on that frequency"
-                    ],
-                    correctAnswer: "D"
-                },
-                {
-                    question: "How does a signal that reads 20 dB over S9 compare to one that reads S9 on a receiver, assuming a properly calibrated S meter?",
-                    options: [
-                        "It is 10 times less powerful",
-                        "It is 20 times less powerful",
-                        "It is 20 times more powerful",
-                        "It is 100 times more powerful"
-                    ],
-                    correctAnswer: "D"
-                },
-                {
-                    question: "Why should DC power for a 100-watt HF transceiver not be supplied by a vehicle’s auxiliary power socket?",
-                    options: [
-                        "The socket is not wired with an RF-shielded power cable",
-                        "The socket’s wiring may be inadequate for the current drawn by the transceiver",
-                        "The DC polarity of the socket is reversed from the polarity of modern HF transceivers",
-                        "Drawing more than 50 watts from this socket could cause the engine to overheat"
-                    ],
-                    correctAnswer: "B"
-                },
-                {
-                    question: "What happens when inductive and capacitive reactance are equal in a series LC circuit?",
-                    options: [
-                        "Resonance causes impedance to be very high",
-                        "Impedance is equal to the geometric mean of the inductance and capacitance",
-                        "Resonance causes impedance to be very low",
-                        "Impedance is equal to the arithmetic mean of the inductance and capacitance"
-                    ],
-                    correctAnswer: "C"
-                },
-                {
-                    question: "What is the PEP produced by 200 volts peak-to-peak across a 50-ohm dummy load?",
-                    options: [
-                        "1.4 watts",
-                        "100 watts",
-                        "353.5 watts",
-                        "400 watts"
-                    ],
-                    correctAnswer: "B"
-                },
-                {
-                    question: "What is the voltage output of a transformer with a 500-turn primary and a 1500-turn secondary when 120 VAC is applied to the primary?",
-                    options: [
-                        "360 volts",
-                        "120 volts",
-                        "40 volts",
-                        "25.5 volts"
-                    ],
-                    correctAnswer: "A"
-                },
-                {
-                    question: "Which of the following is characteristic of an electrolytic capacitor?",
-                    options: [
-                        "Tight tolerance",
-                        "Much less leakage than any other type",
-                        "High capacitance for a given volume",
-                        "Inexpensive RF capacitor"
-                    ],
-                    correctAnswer: "C"
-                },
-                {
-                    question: "Which symbol in the provided schematic represents a field effect transistor?",
-                    options: [
-                        "Symbol 1",
-                        "Symbol 2",
-                        "Symbol 5",
-                        "Symbol 4"
-                    ],
-                    correctAnswer: "A"
-                },
-                {
-                    question: "Which symbol in the provided schematic represents a Zener diode?",
-                    options: [
-                        "Symbol 4",
-                        "Symbol 1",
-                        "Symbol 11",
-                        "Symbol 5"
-                    ],
-                    correctAnswer: "D"
-                },
-                {
-                    question: "Which symbol in the provided schematic represents an NPN junction transistor?",
-                    options: [
-                        "Symbol 1",
-                        "Symbol 2",
-                        "Symbol 7",
-                        "Symbol 11"
-                    ],
-                    correctAnswer: "B"
-                },
-                {
-                    question: "Which symbol in the provided schematic represents a solid core transformer?",
-                    options: [
-                        "Symbol 4",
-                        "Symbol 7",
-                        "Symbol 6",
-                        "Symbol 1"
-                    ],
-                    correctAnswer: "C"
-                },
-                {
-                    question: "Which symbol in the provided schematic represents a tapped inductor?",
-                    options: [
-                        "Symbol 7",
-                        "Symbol 11",
-                        "Symbol 6",
-                        "Symbol 1"
-                    ],
-                    correctAnswer: "A"
-                },
-                {
-                    question: "What circuit is used to select one of the sidebands from a balanced modulator?",
-                    options: [
-                        "Carrier oscillator",
-                        "Filter",
-                        "IF amplifier",
-                        "RF amplifier"
-                    ],
-                    correctAnswer: "B"
-                },
-                {
-                    question: "What is the name of the process that changes the instantaneous frequency of an RF wave to convey information?",
-                    options: [
-                        "Frequency convolution",
-                        "Frequency transformation",
-                        "Frequency conversion",
-                        "Frequency modulation"
-                    ],
-                    correctAnswer: "D"
-                },
-                {
-                    question: "How does the attenuation of coaxial cable change with increasing frequency?",
-                    options: [
-                        "Attenuation is independent of frequency",
-                        "Attenuation increases",
-                        "Attenuation decreases",
-                        "Attenuation follows Marconi’s Law of Attenuation"
-                    ],
-                    correctAnswer: "B"
-                },
-                {
-                    question: "What is the approximate length for a 1/2 wave dipole antenna cut for 14.250 MHz?",
-                    options: [
-                        "8 feet",
-                        "16 feet",
-                        "24 feet",
-                        "33 feet"
-                    ],
-                    correctAnswer: "D"
-                },
-                {
-                    question: "What is the primary effect of increasing boom length and adding directors to a Yagi antenna?",
-                    options: [
-                        "Gain increases",
-                        "Beamwidth increases",
-                        "Front-to-back ratio decreases",
-                        "Resonant frequency is lower"
-                    ],
-                    correctAnswer: "A"
-                },
-                {
-                    question: "What is one way that RF energy can affect human body tissue?",
-                    options: [
-                        "It heats body tissue",
-                        "It causes radiation poisoning",
-                        "It causes the blood count to reach a dangerously low level",
-                        "It cools body tissue"
-                    ],
-                    correctAnswer: "A"
-                },
-                {
-                    question: "Which of the following is true of an emergency generator installation?",
-                    options: [
-                        "The generator should be operated in a well-ventilated area",
-                        "The generator must be insulated from ground",
-                        "Fuel should be stored near the generator for rapid refueling in case of an emergency",
-                        "All these choices are correct"
-                    ],
-                    correctAnswer: "A"
-                }
-            ];
+                correct: "A"
+            }
+        ];
 
-            let questions = [];
-            let currentQuestionIndex = 0;
-            let score = 0;
-            let streak = 0;
+        // Utility to shuffle an array
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex != 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
 
-            const questionArea = document.getElementById('question-area');
-            const answersArea = document.getElementById('answers-area');
-            const feedbackArea = document.getElementById('feedback-area');
-            const nextButton = document.getElementById('next-button');
-            const scoreDisplay = document.getElementById('score');
-            const streakDisplay = document.getElementById('streak');
-
-            function shuffleArray(array) {
-                for (let i = array.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [array[i], array[j]] = [array[j], array[i]];
-                }
-                return array;
+        class MainMenuScene extends Phaser.Scene {
+            constructor() {
+                super({ key: 'MainMenuScene' });
             }
 
-            function renderQuestion() {
-                if (questions.length === 0) {
-                    questionArea.textContent = "You've completed all the questions! The game will now restart with a new set of questions.";
-                    resetGame();
+            create() {
+                const { width, height } = this.scale;
+                this.cameras.main.setBackgroundColor('#2d2d2d');
+
+                this.add.text(width / 2, height * 0.2, 'Amateur Radio Exam Prep', {
+                    fontSize: '38px',
+                    fontFamily: 'Inter',
+                    color: '#ffffff',
+                    fontStyle: 'bold',
+                    align: 'center',
+                }).setOrigin(0.5);
+                
+                this.add.text(width / 2, height * 0.3, 'General Class', {
+                    fontSize: '28px',
+                    fontFamily: 'Inter',
+                    color: '#cccccc',
+                    align: 'center',
+                }).setOrigin(0.5);
+
+                const startButton = this.add.graphics({ fillStyle: { color: 0x4ecca3 } });
+                const startButtonText = this.add.text(width / 2, height / 2, 'Start Studying', {
+                    fontSize: '28px',
+                    fontFamily: 'Inter',
+                    color: '#232931',
+                    fontStyle: 'bold'
+                }).setOrigin(0.5);
+                
+                const buttonWidth = 280;
+                const buttonHeight = 70;
+                startButton.fillRoundedRect(width / 2 - buttonWidth / 2, height / 2 - buttonHeight / 2, buttonWidth, buttonHeight, 16);
+                
+                const startButtonZone = this.add.zone(width / 2 - buttonWidth / 2, height / 2 - buttonHeight / 2, buttonWidth, buttonHeight)
+                    .setOrigin(0)
+                    .setInteractive();
+
+                startButtonZone.on('pointerdown', () => {
+                     this.cameras.main.fadeOut(300, 0, 0, 0);
+                     this.time.delayedCall(300, () => {
+                        this.scene.start('GameScene', { questions: shuffle([...questionData]) });
+                     });
+                });
+
+                startButtonZone.on('pointerover', () => startButton.setAlpha(0.8));
+                startButtonZone.on('pointerout', () => startButton.setAlpha(1));
+            }
+        }
+
+        class GameScene extends Phaser.Scene {
+            constructor() {
+                super({ key: 'GameScene' });
+            }
+
+            init(data) {
+                this.questions = data.questions;
+                this.currentQuestionIndex = 0;
+                this.score = 0;
+            }
+
+            create() {
+                this.cameras.main.setBackgroundColor('#393e46');
+                this.cameras.main.fadeIn(300, 0, 0, 0);
+                
+                this.questionText = this.add.text(this.scale.width / 2, 80, '', {
+                    fontSize: '24px',
+                    color: '#eeeeee',
+                    fontFamily: 'Inter',
+                    wordWrap: { width: this.scale.width - 80 },
+                    align: 'center'
+                }).setOrigin(0.5);
+
+                this.answerButtons = [];
+                this.displayQuestion();
+            }
+
+            displayQuestion() {
+                const question = this.questions[this.currentQuestionIndex];
+                if (!question) {
+                    this.endGame();
                     return;
                 }
 
-                const currentQuestion = questions[currentQuestionIndex];
-                questionArea.textContent = currentQuestion.question;
-                answersArea.innerHTML = '';
-                feedbackArea.textContent = '';
-                nextButton.classList.add('hidden');
-
-                const shuffledOptions = shuffleArray([...currentQuestion.options]);
-
-                shuffledOptions.forEach(option => {
-                    const button = document.createElement('button');
-                    button.textContent = option;
-                    button.className = 'answer-button';
-                    button.setAttribute('data-answer', option);
-                    answersArea.appendChild(button);
-
-                    button.addEventListener('click', () => handleAnswerClick(button, currentQuestion));
-                });
-            }
-
-            function handleAnswerClick(clickedButton, question) {
-                const allButtons = answersArea.querySelectorAll('.answer-button');
-                const clickedAnswer = clickedButton.getAttribute('data-answer');
+                this.questionText.setText(`${this.currentQuestionIndex + 1}. ${question.question}`);
                 
-                // Find the correct answer text
-                const correctOptionIndex = question.correctAnswer.charCodeAt(0) - 'A'.charCodeAt(0);
-                const correctOptionText = question.options[correctOptionIndex];
-
-                const isCorrect = clickedAnswer === correctOptionText;
-
-                allButtons.forEach(button => {
-                    button.classList.add('disabled');
-                    button.removeEventListener('click', handleAnswerClick);
-                    if (button.getAttribute('data-answer') === correctOptionText) {
-                        button.classList.add('correct');
-                    } else {
-                        button.classList.add('incorrect');
-                    }
+                // Clear old buttons
+                this.answerButtons.forEach(button => {
+                    button.destroy();
                 });
+                this.answerButtons = [];
+                
+                const answers = Object.entries(question.answers);
+                const buttonHeight = 60;
+                const buttonSpacing = 20;
+                const totalHeight = (answers.length * buttonHeight) + ((answers.length - 1) * buttonSpacing);
+                let startY = this.scale.height / 2 - totalHeight / 2 + 100;
 
+                answers.forEach(([key, value]) => {
+                    this.createAnswerButton(key, value, startY);
+                    startY += buttonHeight + buttonSpacing;
+                });
+            }
+
+            createAnswerButton(key, text, y) {
+                const { width } = this.scale;
+                const buttonWidth = width - 80;
+                const buttonHeight = 60;
+                
+                const graphics = this.add.graphics();
+                graphics.fillStyle(0x4ecca3, 1);
+                graphics.fillRoundedRect(40, y, buttonWidth, buttonHeight, 16);
+
+                const answerText = this.add.text(width / 2, y + buttonHeight / 2, `${key}: ${text}`, {
+                    fontSize: '18px',
+                    color: '#232931',
+                    fontFamily: 'Inter',
+                    wordWrap: { width: buttonWidth - 40 },
+                    align: 'center'
+                }).setOrigin(0.5);
+
+                const buttonZone = this.add.zone(40, y, buttonWidth, buttonHeight).setInteractive();
+                buttonZone.on('pointerdown', () => this.handleAnswer(key, graphics, answerText));
+                
+                this.answerButtons.push({ graphics, text: answerText, zone: buttonZone, key: key, destroy: () => {
+                    graphics.destroy();
+                    answerText.destroy();
+                    buttonZone.destroy();
+                }});
+            }
+
+            handleAnswer(selectedKey, selectedGraphics) {
+                 // Disable all buttons
+                this.answerButtons.forEach(button => button.zone.disableInteractive());
+
+                const question = this.questions[this.currentQuestionIndex];
+                const isCorrect = selectedKey === question.correct;
+                
                 if (isCorrect) {
-                    feedbackArea.textContent = 'Correct!';
-                    feedbackArea.classList.add('correct');
-                    feedbackArea.classList.remove('incorrect');
-                    score++;
-                    streak++;
+                    this.score++;
+                    selectedGraphics.clear().fillStyle(0x5cb85c, 1).fillRoundedRect(selectedGraphics.x, selectedGraphics.y, this.scale.width - 80, 60, 16);
                 } else {
-                    feedbackArea.textContent = 'Incorrect! The correct answer is highlighted.';
-                    feedbackArea.classList.add('incorrect');
-                    feedbackArea.classList.remove('correct');
-                    streak = 0;
+                    selectedGraphics.clear().fillStyle(0xd9534f, 1).fillRoundedRect(selectedGraphics.x, selectedGraphics.y, this.scale.width - 80, 60, 16);
+                    
+                    // Highlight the correct answer
+                    const correctButton = this.answerButtons.find(b => b.key === question.correct);
+                    if (correctButton) {
+                         correctButton.graphics.clear().fillStyle(0x5cb85c, 1).fillRoundedRect(correctButton.graphics.x, correctButton.graphics.y, this.scale.width - 80, 60, 16);
+                    }
+                    
+                    // Show correct answer text
+                    this.add.text(this.scale.width / 2, this.scale.height - 50, `Correct answer was: ${question.correct}`, {
+                        fontSize: '20px', color: '#f0ad4e', fontFamily: 'Inter', fontStyle: 'bold'
+                    }).setOrigin(0.5).setDepth(1).setName('feedback');
                 }
 
-                scoreDisplay.textContent = score;
-                streakDisplay.textContent = streak;
-                nextButton.classList.remove('hidden');
+                this.time.delayedCall(2000, () => {
+                    const feedback = this.children.getByName('feedback');
+                    if(feedback) feedback.destroy();
+                    this.currentQuestionIndex++;
+                    this.displayQuestion();
+                });
             }
 
-            function nextQuestion() {
-                currentQuestionIndex++;
-                if (currentQuestionIndex < questions.length) {
-                    renderQuestion();
-                } else {
-                    questionArea.textContent = "You've finished this set of questions! The game will now restart.";
-                    setTimeout(resetGame, 3000);
-                }
+            endGame() {
+                this.cameras.main.fadeOut(300, 0, 0, 0);
+                this.time.delayedCall(300, () => {
+                    this.scene.start('GameOverScene', { score: this.score, total: this.questions.length });
+                });
             }
-
-            function resetGame() {
-                questions = shuffleArray([...questionsData]);
-                currentQuestionIndex = 0;
-                score = 0;
-                streak = 0;
-                scoreDisplay.textContent = score;
-                streakDisplay.textContent = streak;
-                renderQuestion();
-            }
-
-            nextButton.addEventListener('click', nextQuestion);
-            resetGame();
         }
 
-        // Call startGame when the DOM is fully loaded.
-        document.addEventListener('DOMContentLoaded', startGame);
+        class GameOverScene extends Phaser.Scene {
+            constructor() {
+                super({ key: 'GameOverScene' });
+            }
+
+            init(data) {
+                this.score = data.score;
+                this.total = data.total;
+            }
+
+            create() {
+                const { width, height } = this.scale;
+                this.cameras.main.setBackgroundColor('#2d2d2d');
+                this.cameras.main.fadeIn(300, 0, 0, 0);
+
+                this.add.text(width / 2, height * 0.25, 'Study Session Complete!', {
+                    fontSize: '38px',
+                    color: '#ffffff',
+                    fontStyle: 'bold',
+                    align: 'center'
+                }).setOrigin(0.5);
+
+                this.add.text(width / 2, height * 0.45, `Your Score: ${this.score} / ${this.total}`, {
+                    fontSize: '48px',
+                    color: '#4ecca3',
+                    fontStyle: 'bold',
+                    align: 'center'
+                }).setOrigin(0.5);
+
+                const restartButton = this.add.graphics({ fillStyle: { color: 0x4ecca3 } });
+                const restartButtonText = this.add.text(width / 2, height * 0.65, 'Study Again', {
+                    fontSize: '28px',
+                    color: '#232931',
+                    fontStyle: 'bold'
+                }).setOrigin(0.5);
+
+                const buttonWidth = 280;
+                const buttonHeight = 70;
+                restartButton.fillRoundedRect(width / 2 - buttonWidth / 2, height * 0.65 - buttonHeight / 2, buttonWidth, buttonHeight, 16);
+                
+                const restartButtonZone = this.add.zone(width / 2 - buttonWidth / 2, height * 0.65 - buttonHeight / 2, buttonWidth, buttonHeight)
+                    .setOrigin(0)
+                    .setInteractive();
+
+                restartButtonZone.on('pointerdown', () => {
+                    this.cameras.main.fadeOut(300, 0, 0, 0);
+                    this.time.delayedCall(300, () => {
+                         this.scene.start('MainMenuScene');
+                    });
+                });
+
+                restartButtonZone.on('pointerover', () => restartButton.setAlpha(0.8));
+                restartButtonZone.on('pointerout', () => restartButton.setAlpha(1));
+            }
+        }
+
+        // --- Game Configuration ---
+        const config = {
+            type: Phaser.AUTO,
+            scale: {
+                mode: Phaser.Scale.FIT,
+                parent: 'game-container',
+                autoCenter: Phaser.Scale.CENTER_BOTH,
+                width: 800,
+                height: 900
+            },
+            scene: [MainMenuScene, GameScene, GameOverScene]
+        };
+
+        // --- Start the Game ---
+        window.onload = () => {
+             // Hide the loading text and start Phaser
+            const loadingText = document.getElementById('loading-text');
+            if(loadingText) loadingText.style.display = 'none';
+            const game = new Phaser.Game(config);
+        };
     </script>
 </body>
 </html>
