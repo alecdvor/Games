@@ -139,19 +139,19 @@
 
         <button id="next-button" class="next-button hidden">Next Question</button>
 
-        <p class="text-xs text-gray-400 mt-4 text-center">Version: 0.0.6</p>
+        <p class="text-xs text-gray-400 mt-4 text-center">Version: 0.0.7</p>
     </div>
 
     <script>
-        // The entire game logic is now a self-contained function.
-        // This ensures the data is available when the game starts.
+        // The game logic is now wrapped in a function that is guaranteed to be called
+        // only after the entire document has been parsed and loaded.
         function startGame() {
             // Firebase variables are part of the platform environment and must remain.
             const __app_id = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
             const __firebase_config = typeof __firebase_config !== 'undefined' ? __firebase_config : '{}';
             const __initial_auth_token = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : '';
             const firebaseConfig = JSON.parse(__firebase_config);
-
+            
             const questionsData = [
                 {
                     question: "On which HF and/or MF amateur bands are there portions where General class licensees cannot transmit?",
@@ -643,8 +643,8 @@
             resetGame();
         }
 
-        // Use a short delay to ensure the page is fully ready.
-        setTimeout(startGame, 50);
+        // Call startGame when the DOM is fully loaded.
+        document.addEventListener('DOMContentLoaded', startGame);
     </script>
 </body>
 </html>
