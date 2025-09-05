@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FCC General Class Exam Study Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        .game-container {
+            max-width: 800px;
+            width: 100%;
+            background-color: #ffffff;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .game-header {
+            text-align: center;
+        }
+        .question-box {
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #e5e7eb;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            text-align: center;
+            font-size: 1.125rem;
+            font-weight: 500;
+        }
+        .answer-button {
+            width: 100%;
+            text-align: left;
+            padding: 1rem 1.5rem;
+            border-radius: 0.75rem;
+            background-color: #f9fafb;
+            transition: background-color 0.2s, transform 0.1s;
+            cursor: pointer;
+            border: 1px solid #e5e7eb;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+        .answer-button:hover:not(.disabled) {
+            background-color: #eef2ff;
+        }
+        .answer-button:active:not(.disabled) {
+            transform: scale(0.98);
+        }
+        .answer-button.correct {
+            background-color: #d1fae5;
+            border-color: #10b981;
+            font-weight: 700;
+            color: #065f46;
+        }
+        .answer-button.incorrect {
+            background-color: #fee2e2;
+            border-color: #ef4444;
+            font-weight: 700;
+            color: #991b1b;
+        }
+        .answer-button.disabled {
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+        .next-button {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            background-color: #4f46e5;
+            color: white;
+            font-weight: 700;
+            border-radius: 0.75rem;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        .next-button:hover {
+            background-color: #4338ca;
+        }
+        .next-button:active {
+            transform: scale(0.98);
+        }
+        .feedback {
+            min-height: 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            text-align: center;
+        }
+        .feedback.correct {
+            color: #10b981;
+        }
+        .feedback.incorrect {
+            color: #ef4444;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">FCC General Class Study</h1>
+            <p class="text-sm text-gray-500">How many can you get right in a row?</p>
+        </div>
+
+        <div class="flex justify-between items-center mb-4">
+            <div class="text-sm font-medium text-gray-600">
+                Score: <span id="score" class="font-bold text-gray-900">0</span>
+            </div>
+            <div class="text-sm font-medium text-gray-600">
+                Correct in a row: <span id="streak" class="font-bold text-gray-900">0</span>
+            </div>
+        </div>
+
+        <div id="question-area" class="question-box">
+            Loading question...
+        </div>
+
+        <div id="answers-area" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Answer buttons will be injected here by JavaScript -->
+        </div>
+
+        <div id="feedback-area" class="feedback"></div>
+
+        <button id="next-button" class="next-button hidden">Next Question</button>
+    </div>
+
+    <script type="module">
+        // Firebase is not needed for this single-player game, but these variables are required by the environment.
+        const __app_id = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const __firebase_config = typeof __firebase_config !== 'undefined' ? __firebase_config : '{}';
+        const __initial_auth_token = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : '';
+        const firebaseConfig = JSON.parse(__firebase_config);
+
+        const questionsData = [
+            {
+                question: "On which HF and/or MF amateur bands are there portions where General class licensees cannot transmit?",
+                options: [
+                    "60 meters, 30 meters, 17 meters, and 12 meters",
+                    "160 meters, 60 meters, 15 meters, and 12 meters",
+                    "80 meters, 40 meters, 20 meters, and 15 meters",
+                    "80 meters, 20 meters, 15 meters, and 10 meters"
+                ],
+                correctAnswer: "C"
+            },
+            {
+                question: "Which of the following applies when the FCC rules designate the amateur service as a secondary user on a band?",
+                options: [
+                    "Amateur stations must record the call sign of the primary service station before operating on a frequency assigned to that station",
+                    "Amateur stations may use the band only during emergencies",
+                    "Amateur stations must not cause harmful interference to primary users and must accept interference from primary users",
+                    "Amateur stations may only operate during specific hours of the day, while primary users are permitted 24-hour use of the band"
+                ],
+                correctAnswer: "C"
+            },
+            {
+                question: "What is the maximum transmitter power an amateur station may use on 10.140 MHz?",
+                options: [
+                    "200 watts PEP output",
+                    "1000 watts PEP output",
+                    "1500 watts PEP output",
+                    "2000 watts PEP output"
+                ],
+                correctAnswer: "A"
+            },
+            {
+                question: "How long is a Certificate of Successful Completion of Examination (CSCE) valid for exam element credit?",
+                options: [
+                    "30 days",
+                    "180 days",
+                    "365 days",
+                    "For as long as your current license is valid"
+                ],
+                correctAnswer: "C"
+            },
+            {
+                question: "The frequency allocations of which ITU region apply to radio amateurs operating in North and South America?",
+                options: [
+                    "Region 4",
+                    "Region 3",
+                    "Region 2",
+                    "Region 1"
+                ],
+                correctAnswer: "C"
+            },
+            {
+                question: "Why should an amateur operator normally avoid transmitting on 14.100, 18.110, 21.150, 24.930 and 28.200 MHz?",
+                options: [
+                    "A system of propagation beacon stations operates on those frequencies",
+                    "A system of automatic digital stations operates on those frequencies",
+                    "These frequencies are set aside for emergency operations",
+                    "These frequencies are set aside for bulletins from the FCC"
+                ],
+                correctAnswer: "A"
+            },
+            {
+                question: "Which mode is most commonly used for voice communications on frequencies of 14 MHz or higher?",
+                options: [
+                    "Upper sideband",
+                    "Lower sideband",
+                    "Suppressed sideband",
+                    "Double sideband"
+                ],
+                correctAnswer: "A"
+            },
+            {
+                question: "What is the first thing you should do if you are communicating with another amateur station and hear a station in distress break in?",
+                options: [
+                    "Inform your local emergency coordinator",
+                    "Acknowledge the station in distress and determine what assistance may be needed",
+                    "Immediately decrease power to avoid interfering with the station in distress",
+                    "Immediately cease all transmissions"
+                ],
+                correctAnswer: "B"
+            },
+            {
+                question: "What does the Q signal 'QRN' mean?",
+                options: [
+                    "Send more slowly",
+                    "Stop sending",
+                    "Zero beat my signal",
+                    "I am troubled by static"
+                ],
+                correctAnswer: "D"
+            },
+            {
+                question: "What is QRP operation?",
+                options: [
+                    "Remote piloted model control",
+                    "Low-power transmit operation",
+                    "Transmission using Quick Response Protocol",
+                    "Traffic relay procedure net operation"
+                ],
+                correctAnswer: "B"
+            },
+            {
+                question: "How does a higher sunspot number affect HF propagation?",
+                options: [
+                    "Higher sunspot numbers generally indicate a greater probability of good propagation at higher frequencies",
+                    "Lower sunspot numbers generally indicate greater probability of sporadic E propagation",
+                    "A zero sunspot number indicates that radio propagation is not possible on any band",
+                    "A zero sunspot number indicates undisturbed conditions"
+                ],
+                correctAnswer: "A"
+            },
+            {
+                question: "What is the solar flux index?",
+                options: [
+                    "A measure of the highest frequency that is useful for ionospheric propagation between two points on Earth",
+                    "A count of sunspots that is adjusted for solar emissions",
+                    "Another name for the American sunspot number",
+                    "A measure of solar radiation with a wavelength of 10.7 centimeters"
+                ],
+                correctAnswer: "D"
+            },
+            {
+                question: "How is long distance radio communication usually affected by the charged particles that reach Earth from solar coronal holes?",
+                options: [
+                    "HF communication is improved",
+                    "HF communication is disturbed",
+                    "VHF/UHF ducting is improved",
+                    "VHF/UHF ducting is disturbed"
+                ],
+                correctAnswer: "B"
+            },
+            {
+                question: "What is a characteristic of skywave signals arriving at your location by both short-path and long-path propagation?",
+                options: [
+                    "Periodic fading approximately every 10 seconds",
+                    "Signal strength increased by 3 dB",
+                    "The signal might be cancelled causing severe attenuation",
+                    "A slightly delayed echo might be heard"
+                ],
+                correctAnswer: "D"
+            },
+            {
+                question: "What is the approximate maximum distance along the Earth’s surface normally covered in one hop using the F2 region?",
+                options: [
+                    "180 miles",
+                    "1,200 miles",
+                    "2,500 miles",
+                    "12,000 miles"
+                ],
+                correctAnswer: "C"
+            },
+            {
+                question: "Why is long-distance communication on the 40-, 60-, 80-, and 160-meter bands more difficult during the day?",
+                options: [
+                    "The F region absorbs signals at these frequencies during daylight hours",
+                    "The F region is unstable during daylight hours",
+                    "The D region absorbs signals at these frequencies during daylight hours",
+                    "The E region is unstable during daylight hours"
+                ],
+                correctAnswer: "C"
+            },
+            {
+                question: "What is the purpose of the notch filter found on many HF transceivers?",
+                options: [
+                    "To restrict the transmitter voice bandwidth",
+                    "To reduce interference from carriers in the receiver passband",
+                    "To eliminate receiver interference from impulse noise sources",
+                    "To remove interfering splatter generated by signals on adjacent frequencies"
+                ],
+                correctAnswer: "B"
+            },
+            {
+                question: "What is the purpose of using a receive attenuator?",
+                options: [
+                    "To prevent receiver overload from strong incoming signals",
+                    "To reduce the transmitter power when driving a linear amplifier",
+                    "To reduce power consumption when operating from batteries",
+                    "To reduce excessive audio level on strong signals"
+                ],
+                correctAnswer: "A"
+            },
+            {
+                question: "What item of test equipment contains horizontal and vertical channel amplifiers?",
+                options: [
+                    "An ohmmeter",
+                    "A signal generator",
+                    "An ammeter",
+                    "An oscilloscope"
+                ],
+                correctAnswer: "D"
+            },
+            {
+                question: "What is a possible cause of high voltages that produce RF burns?",
+                options: [
+                    "Flat braid rather than round wire has been used for the ground wire",
+                    "Insulated wire has been used for the ground wire",
+                    "The ground rod is resonant",
+                    "The ground wire has high impedance on that frequency"
+                ],
+                correctAnswer: "D"
+            },
+            {
+                question: "How does a signal that reads 20 dB over S9 compare to one that reads S9 on a receiver, assuming a properly calibrated S meter?",
+                options: [
+                    "It is 10 times less powerful",
+                    "It is 20 times less powerful",
+                    "It is 20 times more powerful",
+                    "It is 100 times more powerful"
+                ],
+                correctAnswer: "D"
+            },
+            {
+                question: "Why should DC power for a 100-watt HF transceiver not be supplied by a vehicle’s auxiliary power socket?",
+                options: [
+                    "The socket is not wired with an RF-shielded power cable",
+                    "The socket’s wiring may be inadequate for the current drawn by the transceiver",
+                    "The DC polarity of the socket is reversed from the polarity of modern HF transceivers",
+                    "Drawing more than 50 watts from this socket could cause the engine to overheat"
+                ],
+                correctAnswer: "B"
+            },
+            {
+                question: "What happens when inductive and capacitive reactance are equal in a series LC circuit?",
+                options: [
+                    "Resonance causes impedance to be very high",
+                    "Impedance is equal to the geometric mean of the inductance and capacitance",
+                    "Resonance causes impedance to be very low",
+                    "Impedance is equal to the arithmetic mean of the inductance and capacitance"
+                ],
+                correctAnswer: "C"
+            },
+            {
+                question: "What is the PEP produced by 200 volts peak-to-peak across a 50-ohm dummy load?",
+                options: [
+                    "1.4 watts",
+                    "100 watts",
+                    "353.5 watts",
+                    "400 watts"
+                ],
+                correctAnswer: "B"
+            },
+            {
+                question: "What is the voltage output of a transformer with a 500-turn primary and a 1500-turn secondary when 120 VAC is applied to the primary?",
+                options: [
+                    "360 volts",
+                    "120 volts",
+                    "40 volts",
+                    "25.5 volts"
+                ],
+                correctAnswer: "A"
+            },
+            {
+                question: "Which of the following is characteristic of an electrolytic capacitor?",
+                options: [
+                    "Tight tolerance",
+                    "Much less leakage than any other type",
+                    "High capacitance for a given volume",
+                    "Inexpensive RF capacitor"
+                ],
+                correctAnswer: "C"
+            },
+            {
+                question: "Which symbol in the provided schematic represents an NPN junction transistor?",
+                options: [
+                    "Symbol 1 (field effect transistor)",
+                    "Symbol 2 (NPN junction transistor)",
+                    "Symbol 7 (tapped inductor)",
+                    "Symbol 11 (resistor)"
+                ],
+                correctAnswer: "B"
+            },
+            {
+                question: "What circuit is used to select one of the sidebands from a balanced modulator?",
+                options: [
+                    "Carrier oscillator",
+                    "Filter",
+                    "IF amplifier",
+                    "RF amplifier"
+                ],
+                correctAnswer: "B"
+            },
+            {
+                question: "What is the name of the process that changes the instantaneous frequency of an RF wave to convey information?",
+                options: [
+                    "Frequency convolution",
+                    "Frequency transformation",
+                    "Frequency conversion",
+                    "Frequency modulation"
+                ],
+                correctAnswer: "D"
+            },
+            {
+                question: "How does the attenuation of coaxial cable change with increasing frequency?",
+                options: [
+                    "Attenuation is independent of frequency",
+                    "Attenuation increases",
+                    "Attenuation decreases",
+                    "Attenuation follows Marconi’s Law of Attenuation"
+                ],
+                correctAnswer: "B"
+            },
+            {
+                question: "What is the approximate length for a 1/2 wave dipole antenna cut for 14.250 MHz?",
+                options: [
+                    "8 feet",
+                    "16 feet",
+                    "24 feet",
+                    "33 feet"
+                ],
+                correctAnswer: "D"
+            },
+            {
+                question: "What is the primary effect of increasing boom length and adding directors to a Yagi antenna?",
+                options: [
+                    "Gain increases",
+                    "Beamwidth increases",
+                    "Front-to-back ratio decreases",
+                    "Resonant frequency is lower"
+                ],
+                correctAnswer: "A"
+            },
+            {
+                question: "What is one way that RF energy can affect human body tissue?",
+                options: [
+                    "It heats body tissue",
+                    "It causes radiation poisoning",
+                    "It causes the blood count to reach a dangerously low level",
+                    "It cools body tissue"
+                ],
+                correctAnswer: "A"
+            },
+            {
+                question: "Which of the following is true of an emergency generator installation?",
+                options: [
+                    "The generator should be operated in a well-ventilated area",
+                    "The generator must be insulated from ground",
+                    "Fuel should be stored near the generator for rapid refueling in case of an emergency",
+                    "All these choices are correct"
+                ],
+                correctAnswer: "A"
+            }
+        ];
+
+        let questions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let streak = 0;
+
+        const questionArea = document.getElementById('question-area');
+        const answersArea = document.getElementById('answers-area');
+        const feedbackArea = document.getElementById('feedback-area');
+        const nextButton = document.getElementById('next-button');
+        const scoreDisplay = document.getElementById('score');
+        const streakDisplay = document.getElementById('streak');
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function renderQuestion() {
+            if (questions.length === 0) {
+                questionArea.textContent = "You've completed all the questions! The game will now restart with a new set of questions.";
+                resetGame();
+                return;
+            }
+
+            const currentQuestion = questions[currentQuestionIndex];
+            questionArea.textContent = currentQuestion.question;
+            answersArea.innerHTML = '';
+            feedbackArea.textContent = '';
+            nextButton.classList.add('hidden');
+
+            const shuffledOptions = shuffleArray([...currentQuestion.options]);
+
+            shuffledOptions.forEach(option => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.className = 'answer-button';
+                button.setAttribute('data-answer', option);
+                answersArea.appendChild(button);
+
+                button.addEventListener('click', () => handleAnswerClick(button, currentQuestion));
+            });
+        }
+
+        function handleAnswerClick(clickedButton, question) {
+            const allButtons = answersArea.querySelectorAll('.answer-button');
+            const clickedAnswer = clickedButton.getAttribute('data-answer');
+            const correctOptionText = question.options[question.correctAnswer.charCodeAt(0) - 'A'.charCodeAt(0)];
+
+            let isCorrect = clickedAnswer === correctOptionText;
+
+            allButtons.forEach(button => {
+                button.classList.add('disabled');
+                button.removeEventListener('click', handleAnswerClick);
+                if (button.getAttribute('data-answer') === correctOptionText) {
+                    button.classList.add('correct');
+                } else {
+                    button.classList.add('incorrect');
+                }
+            });
+
+            if (isCorrect) {
+                feedbackArea.textContent = 'Correct!';
+                feedbackArea.classList.add('correct');
+                feedbackArea.classList.remove('incorrect');
+                score++;
+                streak++;
+            } else {
+                feedbackArea.textContent = 'Incorrect! The correct answer is highlighted.';
+                feedbackArea.classList.add('incorrect');
+                feedbackArea.classList.remove('correct');
+                streak = 0;
+            }
+
+            scoreDisplay.textContent = score;
+            streakDisplay.textContent = streak;
+            nextButton.classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                renderQuestion();
+            } else {
+                questionArea.textContent = "You've finished this set of questions! The game will now restart.";
+                setTimeout(resetGame, 3000);
+            }
+        }
+
+        function resetGame() {
+            questions = shuffleArray([...questionsData]);
+            currentQuestionIndex = 0;
+            score = 0;
+            streak = 0;
+            scoreDisplay.textContent = score;
+            streakDisplay.textContent = streak;
+            renderQuestion();
+        }
+
+        nextButton.addEventListener('click', nextQuestion);
+
+        document.addEventListener('DOMContentLoaded', () => {
+            resetGame();
+        });
+    </script>
+</body>
+</html>
