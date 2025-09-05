@@ -55,19 +55,21 @@
     </div>
 
     <!-- Chapter Question Files -->
-    <script src="study/chapter1.js"></script>
-    <script src="study/chapter2.js"></script>
-    <script src="study/chapter3.js"></script>
-    <script src="study/chapter4.js"></script>
-    <script src="study/chapter5.js"></script>
-    <script src="study/chapter6.js"></script>
-    <script src="study/chapter7.js"></script>
-    <script src="study/chapter8.js"></script>
-    <script src="study/chapter9.js"></script>
-    <script src="study/chapter10.js"></script>
+    <script src="study/g1_questions.js"></script>
+    <script src="study/g2_questions.js"></script>
+    <script src="study/g3_questions.js"></script>
+    <script src="study/g4_questions.js"></script>
+    <script src="study/g5_questions.js"></script>
+    <script src="study/g6_questions.js"></script>
+    <script src="study/g7_questions.js"></script>
+    <script src="study/g8_questions.js"></script>
+    <script src="study/g9_questions.js"></script>
+    <script src="study/g0_questions.js"></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // NOTE: The variable names (chapter1, chapter2, etc.) are defined inside the loaded JS files.
+            // They must match what's in those files, regardless of the filename.
             const allChapters = [chapter1, chapter2, chapter3, chapter4, chapter5, chapter6, chapter7, chapter8, chapter9, chapter10];
             const allQuestions = allChapters.flatMap(chapter => chapter.questions);
             const totalQuestions = allQuestions.length;
