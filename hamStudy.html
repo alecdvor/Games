@@ -139,12 +139,12 @@
 
         <button id="next-button" class="next-button hidden">Next Question</button>
 
-        <p class="text-xs text-gray-400 mt-4 text-center">Version: 0.0.5</p>
+        <p class="text-xs text-gray-400 mt-4 text-center">Version: 0.0.6</p>
     </div>
 
     <script>
-        // Use a standard script tag and an explicit function call to ensure
-        // all elements are rendered before the script runs.
+        // The entire game logic is now a self-contained function.
+        // This ensures the data is available when the game starts.
         function startGame() {
             // Firebase variables are part of the platform environment and must remain.
             const __app_id = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
@@ -643,8 +643,8 @@
             resetGame();
         }
 
-        // Call the startGame function immediately after this script block is parsed
-        startGame();
+        // Use a short delay to ensure the page is fully ready.
+        setTimeout(startGame, 50);
     </script>
 </body>
 </html>
