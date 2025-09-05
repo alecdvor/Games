@@ -1,328 +1,280 @@
-const chapter9 = {
-  "name": "Antennas and Feed Lines",
+const chapter8 = {
+  "name": "Signals and Emissions",
   "questions": [
     {
-      "id": "G9A01",
-      "question": "What is a major difference between a vertical and horizontal antenna?",
+      "id": "G8A01",
+      "question": "What is modulation?",
       "options": [
-        "The polarization of the radio waves they emit",
-        "Their impedance",
-        "The frequency range they cover",
-        "Their power handling capability"
+        "Varying some characteristic of an RF carrier signal for the purpose of conveying information",
+        "Changing the frequency of an audio signal",
+        "Increasing the power of a signal to make it travel farther",
+        "A type of antenna that is very efficient"
       ],
-      "answer": "The polarization of the radio waves they emit",
-      "go_to": "G9A02"
+      "answer": "Varying some characteristic of an RF carrier signal for the purpose of conveying information",
+      "go_to": "G8A02"
     },
     {
-      "id": "G9A02",
-      "question": "What does antenna gain mean?",
+      "id": "G8A02",
+      "question": "Which type of modulation varies the instantaneous frequency of the main carrier signal?",
       "options": [
-        "A measure of how well an antenna concentrates radio frequency energy in a particular direction",
-        "The ratio of the antenna's power input to its power output",
-        "The physical size of the antenna",
-        "The ability of an antenna to operate on multiple bands"
+        "Frequency modulation (FM)",
+        "Amplitude modulation (AM)",
+        "Phase modulation (PM)",
+        "Pulse modulation"
       ],
-      "answer": "A measure of how well an antenna concentrates radio frequency energy in a particular direction",
-      "go_to": "G9A03"
+      "answer": "Frequency modulation (FM)",
+      "go_to": "G8A03"
     },
     {
-      "id": "G9A03",
-      "question": "What is the approximate length of a half-wave dipole antenna for the 2-meter band (146 MHz)?",
+      "id": "G8A03",
+      "question": "Which type of modulation varies the amplitude of the main carrier signal?",
       "options": [
-        "Approximately 38 inches",
-        "Approximately 19 inches",
-        "Approximately 112 inches",
-        "Approximately 21 inches"
+        "Amplitude modulation (AM)",
+        "Frequency modulation (FM)",
+        "Single sideband (SSB)",
+        "Phase modulation (PM)"
       ],
-      "answer": "Approximately 38 inches",
-      "go_to": "G9A04"
+      "answer": "Amplitude modulation (AM)",
+      "go_to": "G8A04"
     },
     {
-      "id": "G9A04",
-      "question": "The orientation of the electric field of a radio wave is called what?",
+      "id": "G8A04",
+      "question": "Which of the following is a form of amplitude modulation?",
       "options": [
-        "Polarization",
-        "Impedance",
-        "Frequency",
-        "Wavelength"
+        "Single sideband (SSB)",
+        "Packet radio",
+        "Frequency modulation (FM)",
+        "Phase modulation (PM)"
       ],
-      "answer": "Polarization",
-      "go_to": "G9A05"
+      "answer": "Single sideband (SSB)",
+      "go_to": "G8A05"
     },
     {
-      "id": "G9A05",
-      "question": "Which of the following antennas is vertically polarized?",
+      "id": "G8A05",
+      "question": "Which of the following voice modes has the narrowest bandwidth?",
       "options": [
-        "A quarter-wave vertical antenna",
-        "A half-wave dipole mounted horizontally",
-        "A Yagi antenna with horizontal elements",
-        "A dish antenna"
+        "Single sideband (SSB)",
+        "Frequency modulation (FM)",
+        "Amplitude modulation (AM)",
+        "Phase modulation (PM)"
       ],
-      "answer": "A quarter-wave vertical antenna",
-      "go_to": "G9A06"
+      "answer": "Single sideband (SSB)",
+      "go_to": "G8A06"
     },
     {
-      "id": "G9A06",
-      "question": "What is a directional antenna?",
+      "id": "G8A06",
+      "question": "Which mode is most commonly used for VHF packet radio transmissions?",
       "options": [
-        "An antenna that radiates or receives signals better in some directions than others",
-        "An antenna that radiates signals equally well in all directions",
-        "An antenna that can be used on all bands",
-        "An antenna that is only used for receiving"
+        "FM",
+        "AM",
+        "SSB",
+        "CW"
       ],
-      "answer": "An antenna that radiates or receives signals better in some directions than others",
-      "go_to": "G9A07"
+      "answer": "FM",
+      "go_to": "G8A07"
     },
     {
-      "id": "G9A07",
-      "question": "Which of the following is a type of directional antenna?",
+      "id": "G8A07",
+      "question": "What is another name for emissions produced by on-off keying of an RF signal?",
       "options": [
-        "A Yagi antenna",
-        "A vertical antenna",
-        "A dipole antenna",
-        "A dummy load"
+        "Continuous Wave (CW)",
+        "Frequency Modulation (FM)",
+        "Amplitude Modulation (AM)",
+        "Single Sideband (SSB)"
       ],
-      "answer": "A Yagi antenna",
-      "go_to": "G9A08"
+      "answer": "Continuous Wave (CW)",
+      "go_to": "G8A08"
     },
     {
-      "id": "G9A08",
-      "question": "What is a main characteristic of a Yagi antenna?",
+      "id": "G8A08",
+      "question": "Which of the following is a digital mode?",
       "options": [
-        "It is highly directional",
-        "It is omnidirectional",
-        "It is a very small antenna",
-        "It can only be used on HF bands"
+        "PSK31",
+        "SSB",
+        "AM",
+        "FM"
       ],
-      "answer": "It is highly directional",
-      "go_to": "G9A09"
+      "answer": "PSK31",
+      "go_to": "G8A09"
     },
     {
-      "id": "G9A09",
-      "question": "What does a 'rubber duck' antenna, commonly found on handheld transceivers, consist of?",
+      "id": "G8A09",
+      "question": "What is the function of a mixer in a superheterodyne receiver?",
       "options": [
-        "A coil of wire sealed in a rubbery material",
-        "A small dipole antenna",
-        "A piece of straight, stiff wire",
-        "A long wire antenna"
+        "To shift the incoming signal to an intermediate frequency",
+        "To amplify the audio signal",
+        "To filter out unwanted signals",
+        "To demodulate the signal"
       ],
-      "answer": "A coil of wire sealed in a rubbery material",
-      "go_to": "G9A10"
+      "answer": "To shift the incoming signal to an intermediate frequency",
+      "go_to": "G8A10"
     },
     {
-      "id": "G9A10",
-      "question": "Why are rubber duck antennas less effective than a full-sized quarter-wave antenna?",
+      "id": "G8A10",
+      "question": "What is the function of the detector stage in a receiver?",
       "options": [
-        "They are physically shorter, which makes them less efficient radiators",
-        "The rubber material absorbs RF energy",
-        "They have a very high SWR",
-        "They are not properly grounded"
+        "To demodulate the RF signal and recover the original information",
+        "To amplify the RF signal",
+        "To mix the signal with a local oscillator",
+        "To filter out noise"
       ],
-      "answer": "They are physically shorter, which makes them less efficient radiators",
-      "go_to": "G9A11"
+      "answer": "To demodulate the RF signal and recover the original information",
+      "go_to": "G8A11"
     },
     {
-      "id": "G9A11",
-      "question": "What is the primary purpose of a mobile antenna?",
+      "id": "G8A11",
+      "question": "What is the approximate bandwidth of a typical single sideband (SSB) voice signal?",
       "options": [
-        "To provide communication capability from a vehicle",
-        "To be used as a base station antenna",
-        "To communicate over very long distances",
-        "To be used for satellite communication"
+        "3 kHz",
+        "6 kHz",
+        "15 kHz",
+        "100 Hz"
       ],
-      "answer": "To provide communication capability from a vehicle",
-      "go_to": "G9B01"
+      "answer": "3 kHz",
+      "go_to": "G8B01"
     },
     {
-      "id": "G9B01",
-      "question": "What is the most common type of feed line used for amateur radio stations?",
+      "id": "G8B01",
+      "question": "Which mode is most commonly used for VHF and UHF voice repeaters?",
       "options": [
-        "Coaxial cable",
-        "Twin-lead",
-        "Waveguide",
-        "Fiber optic cable"
+        "FM",
+        "AM",
+        "SSB",
+        "CW"
       ],
-      "answer": "Coaxial cable",
-      "go_to": "G9B02"
+      "answer": "FM",
+      "go_to": "G8B02"
     },
     {
-      "id": "G9B02",
-      "question": "What is the characteristic impedance of most coaxial cables used in amateur radio?",
+      "id": "G8B02",
+      "question": "What is frequency deviation in an FM transmission?",
       "options": [
-        "50 ohms",
-        "75 ohms",
-        "300 ohms",
-        "600 ohms"
+        "The amount the carrier frequency is varied from its center frequency",
+        "The total bandwidth of the signal",
+        "The rate at which the frequency changes",
+        "The power output of the transmitter"
       ],
-      "answer": "50 ohms",
-      "go_to": "G9B03"
+      "answer": "The amount the carrier frequency is varied from its center frequency",
+      "go_to": "G8B03"
     },
     {
-      "id": "G9B03",
-      "question": "Why is it important to have a low SWR?",
+      "id": "G8B03",
+      "question": "What do the terms LSB and USB mean in single sideband transmissions?",
       "options": [
-        "To ensure maximum power is transferred from the transmitter to the antenna",
-        "To increase the frequency of the signal",
-        "To reduce the antenna gain",
-        "To change the polarization of the signal"
+        "Lower Sideband and Upper Sideband",
+        "Low Signal Band and High Signal Band",
+        "Local Side Buffer and Universal Side Buffer",
+        "Left Side Band and Right Side Band"
       ],
-      "answer": "To ensure maximum power is transferred from the transmitter to the antenna",
-      "go_to": "G9B04"
+      "answer": "Lower Sideband and Upper Sideband",
+      "go_to": "G8B04"
     },
     {
-      "id": "G9B04",
-      "question": "What happens to power that is not delivered to the antenna due to a high SWR?",
+      "id": "G8B04",
+      "question": "On which HF bands is LSB the conventional voice mode?",
       "options": [
-        "It is reflected back to the transmitter, which can cause damage",
-        "It is converted into sound",
-        "It is radiated as heat from the feed line",
-        "It is absorbed by the antenna tuner"
+        "160, 75, and 40 meters",
+        "20, 17, 15, 12, and 10 meters",
+        "All VHF bands",
+        "All UHF bands"
       ],
-      "answer": "It is reflected back to the transmitter, which can cause damage",
-      "go_to": "G9B05"
+      "answer": "160, 75, and 40 meters",
+      "go_to": "G8B05"
     },
     {
-      "id": "G9B05",
-      "question": "What does an antenna tuner do?",
+      "id": "G8B05",
+      "question": "On which HF bands is USB the conventional voice mode?",
       "options": [
-        "It matches the impedance of the transmitter to the impedance of the antenna system",
-        "It changes the frequency of the transmitter",
-        "It increases the power output of the transmitter",
-        "It filters out unwanted signals"
+        "Bands above 10 MHz: 20, 17, 15, 12, and 10 meters",
+        "Bands below 10 MHz: 160, 75, and 40 meters",
+        "Only on VHF bands",
+        "Only on 6 meters"
       ],
-      "answer": "It matches the impedance of the transmitter to the impedance of the antenna system",
-      "go_to": "G9B06"
+      "answer": "Bands above 10 MHz: 20, 17, 15, 12, and 10 meters",
+      "go_to": "G8B06"
     },
     {
-      "id": "G9B06",
-      "question": "Which of the following causes the most loss in a coaxial cable?",
+      "id": "G8B06",
+      "question": "What is the emission designator for CW?",
       "options": [
-        "High frequency and long cable length",
-        "Low frequency and short cable length",
-        "A perfect SWR",
-        "Using the correct impedance cable"
+        "A1A",
+        "J3E",
+        "F3E",
+        "G7E"
       ],
-      "answer": "High frequency and long cable length",
-      "go_to": "G9B07"
+      "answer": "A1A",
+      "go_to": "G8B07"
     },
     {
-      "id": "G9B07",
-      "question": "What is a common type of connector used for coaxial cable in amateur radio?",
+      "id": "G8B07",
+      "question": "What is the emission designator for SSB voice?",
       "options": [
-        "PL-259",
-        "RJ-45",
-        "USB",
-        "HDMI"
+        "J3E",
+        "F3E",
+        "A1A",
+        "A3E"
       ],
-      "answer": "PL-259",
-      "go_to": "G9B08"
+      "answer": "J3E",
+      "go_to": "G8B08"
     },
     {
-      "id": "G9B08",
-      "question": "What is an SWR meter used for?",
+      "id": "G8B08",
+      "question": "What is the emission designator for FM voice?",
       "options": [
-        "To measure the standing wave ratio in a feed line",
-        "To measure the power output of a transmitter",
-        "To measure the frequency of a signal",
-        "To measure the impedance of an antenna"
+        "F3E",
+        "J3E",
+        "A1A",
+        "G7E"
       ],
-      "answer": "To measure the standing wave ratio in a feed line",
-      "go_to": "G9C01"
+      "answer": "F3E",
+      "go_to": "G8C01"
     },
     {
-      "id": "G9C01",
-      "question": "What is a major safety concern when installing an antenna?",
+      "id": "G8C01",
+      "question": "What does the acronym SDR stand for in radio?",
       "options": [
-        "Contact with overhead power lines",
-        "Causing interference to neighbors",
-        "The antenna falling over in a light breeze",
-        "Getting a sunburn"
+        "Software Defined Radio",
+        "Signal Distribution Repeater",
+        "Standard Digital Radio",
+        "Shortwave Digital Receiver"
       ],
-      "answer": "Contact with overhead power lines",
-      "go_to": "G9C02"
+      "answer": "Software Defined Radio",
+      "go_to": "G8C02"
     },
     {
-      "id": "G9C02",
-      "question": "What is the purpose of grounding an antenna mast?",
+      "id": "G8C02",
+      "question": "What are the basic components of a Software Defined Radio (SDR)?",
       "options": [
-        "To protect against lightning strikes",
-        "To improve the SWR",
-        "To increase the antenna gain",
-        "To prevent RF exposure"
+        "A computer, an analog-to-digital converter, and a digital signal processor (DSP)",
+        "A vacuum tube, a capacitor, and an inductor",
+        "A transmitter and a receiver",
+        "An antenna, a feed line, and a tuner"
       ],
-      "answer": "To protect against lightning strikes",
-      "go_to": "G9C03"
+      "answer": "A computer, an analog-to-digital converter, and a digital signal processor (DSP)",
+      "go_to": "G8C03"
     },
     {
-      "id": "G9C03",
-      "question": "What is RF exposure?",
+      "id": "G8C03",
+      "question": "What is FT8?",
       "options": [
-        "The exposure of the human body to radio frequency energy",
-        "The amount of power a transmitter is producing",
-        "The strength of the signal received from a distant station",
-        "The type of modulation used by a transmitter"
+        "A digital mode capable of weak signal communication",
+        "A type of FM modulation",
+        "A high-bandwidth voice mode",
+        "A type of antenna"
       ],
-      "answer": "The exposure of the human body to radio frequency energy",
-      "go_to": "G9C04"
+      "answer": "A digital mode capable of weak signal communication",
+      "go_to": "G8C04"
     },
     {
-      "id": "G9C04",
-      "question": "Why is it a good idea to wear a hard hat and safety glasses when working on an antenna tower?",
+      "id": "G8C04",
+      "question": "What is meant by the 'duty cycle' of a transmission?",
       "options": [
-        "To protect against falling objects and eye injuries",
-        "To improve your radio signal",
-        "To prevent RF exposure",
-        "To keep the sun out of your eyes"
+        "The percentage of time a transmitter is transmitting during a specific time period",
+        "The frequency of the signal",
+        "The power output of the transmitter",
+        "The efficiency of the antenna"
       ],
-      "answer": "To protect against falling objects and eye injuries",
-      "go_to": "G9C05"
-    },
-    {
-      "id": "G9C05",
-      "question": "What is a gin pole?",
-      "options": [
-        "A device used to lift antennas and tower sections",
-        "A type of antenna",
-        "A tool for measuring SWR",
-        "A safety harness"
-      ],
-      "answer": "A device used to lift antennas and tower sections",
-      "go_to": "G9C06"
-    },
-    {
-      "id": "G9C06",
-      "question": "What is the minimum safe distance to maintain from power lines when installing an antenna?",
-      "options": [
-        "A distance great enough so that if the antenna or mast falls, it cannot contact the power lines",
-        "1 foot",
-        "5 feet",
-        "There is no minimum distance"
-      ],
-      "answer": "A distance great enough so that if the antenna or mast falls, it cannot contact the power lines",
-      "go_to": "G9C07"
-    },
-    {
-      "id": "G9C07",
-      "question": "What should be done with coaxial cable that is run outdoors?",
-      "options": [
-        "It should be weather-sealed to prevent moisture from entering the cable",
-        "It should be painted to match the house",
-        "It should be buried at least 6 feet deep",
-        "It should be coiled up to increase inductance"
-      ],
-      "answer": "It should be weather-sealed to prevent moisture from entering the cable",
-      "go_to": "G9C08"
-    },
-    {
-      "id": "G9C08",
-      "question": "Which of the following factors affects the RF exposure risk to a person near an antenna?",
-      "options": [
-        "Transmitter power, distance from the antenna, and frequency",
-        "The type of modulation being used",
-        "The SWR of the antenna system",
-        "The time of day"
-      ],
-      "answer": "Transmitter power, distance from the antenna, and frequency"
+      "answer": "The percentage of time a transmitter is transmitting during a specific time period"
     }
   ]
 }
