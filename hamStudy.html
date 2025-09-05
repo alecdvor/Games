@@ -139,7 +139,7 @@
 
         <button id="next-button" class="next-button hidden">Next Question</button>
 
-        <p class="text-xs text-gray-400 mt-4 text-center">Version: 0.0.2</p>
+        <p class="text-xs text-gray-400 mt-4 text-center">Version: 0.0.3</p>
     </div>
 
     <script type="module">
@@ -640,8 +640,11 @@
 
         nextButton.addEventListener('click', nextQuestion);
         
-        // This is a more direct way to start the game after the script has loaded.
-        resetGame();
+        // This is a more robust way to start the game after the script has loaded.
+        document.addEventListener('DOMContentLoaded', () => {
+          console.log("DOM fully loaded and parsed. Starting game...");
+          resetGame();
+        });
     </script>
 </body>
 </html>
