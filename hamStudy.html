@@ -3,316 +3,165 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>General Class Exam Study Game</title>
-    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
-    <!-- Loading the new questions file first -->
-    <script src="/questions.js"></script>
+    <title>Amateur Radio General Exam Study Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Improved styling for better mobile compatibility */
-        html, body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden; /* Prevents scrollbars */
-        }
         body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #333;
             font-family: 'Inter', sans-serif;
+            touch-action: manipulation;
         }
-        #game-container {
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        .option-btn {
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease;
         }
-        /* A simple pre-game loader text style */
-        #loading-text {
-            font-size: 24px;
-            color: #ddd;
+        .option-btn:active {
+            transform: scale(0.98);
+        }
+        .correct {
+            background-color: #22c55e !important; /* Tailwind green-500 */
+            color: white !important;
+        }
+        .incorrect {
+            background-color: #ef4444 !important; /* Tailwind red-500 */
+            color: white !important;
         }
     </style>
 </head>
-<body>
-    <div id="game-container">
-        <div id="loading-text">Loading Game...</div>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <div id="game-container" class="w-full max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 md:p-8">
+        <h1 class="text-2xl md:text-3xl font-bold text-center text-gray-800 dark:text-white mb-2">General Class Exam Prep</h1>
+        <p id="progress-text" class="text-center text-gray-500 dark:text-gray-400 mb-6">Question 1 of 514</p>
+
+        <!-- Image container -->
+        <div id="image-container" class="mb-6 text-center">
+            <img id="question-image" src="" alt="Question Figure" class="max-w-full h-auto mx-auto rounded-lg shadow-md hidden">
+        </div>
+
+        <div id="question-container">
+            <p id="question-id" class="text-sm font-semibold text-blue-600 dark:text-blue-400 mb-2"></p>
+            <p id="question-text" class="text-lg md:text-xl font-medium mb-6"></p>
+        </div>
+
+        <div id="options-container" class="space-y-4">
+            <!-- Options will be dynamically inserted here -->
+        </div>
+
+        <div class="mt-8 text-center">
+            <button id="next-btn" class="w-full sm:w-auto bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 transition-all duration-300 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed">
+                Next Question
+            </button>
+        </div>
     </div>
 
+    <!-- Chapter Question Files -->
+    <script src="chapter1.js"></script>
+    <script src="chapter2.js"></script>
+    <script src="chapter3.js"></script>
+    <script src="chapter4.js"></script>
+    <script src="chapter5.js"></script>
+    <script src="chapter6.js"></script>
+    <script src="chapter7.js"></script>
+    <script src="chapter8.js"></script>
+    <script src="chapter9.js"></script>
+    <script src="chapter10.js"></script>
+
     <script>
-        // --- Note: Question data is now loaded from questions.js ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const allChapters = [chapter1, chapter2, chapter3, chapter4, chapter5, chapter6, chapter7, chapter8, chapter9, chapter10];
+            const allQuestions = allChapters.flatMap(chapter => chapter.questions);
+            const totalQuestions = allQuestions.length;
 
-        // Utility to shuffle an array
-        function shuffle(array) {
-            let currentIndex = array.length, randomIndex;
-            while (currentIndex != 0) {
-                randomIndex = Math.floor(Math.random() * currentIndex);
-                currentIndex--;
-                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
-            }
-            return array;
-        }
+            let currentQuestionIndex = 0;
+            let optionsDisabled = false;
 
-        class MainMenuScene extends Phaser.Scene {
-            constructor() {
-                super({ key: 'MainMenuScene' });
-            }
+            const progressText = document.getElementById('progress-text');
+            const questionIdText = document.getElementById('question-id');
+            const questionText = document.getElementById('question-text');
+            const optionsContainer = document.getElementById('options-container');
+            const nextBtn = document.getElementById('next-btn');
+            const questionImage = document.getElementById('question-image');
 
-            create() {
-                const { width, height } = this.scale;
-                this.cameras.main.setBackgroundColor('#2d2d2d');
+            function displayQuestion(index) {
+                optionsDisabled = false;
+                const question = allQuestions[index];
 
-                this.add.text(width / 2, height * 0.2, 'Amateur Radio Exam Prep', {
-                    fontSize: '38px',
-                    fontFamily: 'Inter',
-                    color: '#ffffff',
-                    fontStyle: 'bold',
-                    align: 'center',
-                }).setOrigin(0.5);
-                
-                this.add.text(width / 2, height * 0.3, 'General Class', {
-                    fontSize: '28px',
-                    fontFamily: 'Inter',
-                    color: '#cccccc',
-                    align: 'center',
-                }).setOrigin(0.5);
+                // Update text content
+                progressText.textContent = `Question ${index + 1} of ${totalQuestions}`;
+                questionIdText.textContent = `ID: ${question.id}`;
+                questionText.textContent = question.question;
 
-                const startButton = this.add.graphics({ fillStyle: { color: 0x4ecca3 } });
-                const startButtonText = this.add.text(width / 2, height / 2, 'Start Studying', {
-                    fontSize: '28px',
-                    fontFamily: 'Inter',
-                    color: '#232931',
-                    fontStyle: 'bold'
-                }).setOrigin(0.5);
-                
-                const buttonWidth = 280;
-                const buttonHeight = 70;
-                startButton.fillRoundedRect(width / 2 - buttonWidth / 2, height / 2 - buttonHeight / 2, buttonWidth, buttonHeight, 16);
-                
-                const startButtonZone = this.add.zone(width / 2 - buttonWidth / 2, height / 2 - buttonHeight / 2, buttonWidth, buttonHeight)
-                    .setOrigin(0)
-                    .setInteractive();
+                // Clear previous options
+                optionsContainer.innerHTML = '';
 
-                startButtonZone.on('pointerdown', () => {
-                     this.cameras.main.fadeOut(300, 0, 0, 0);
-                     this.time.delayedCall(300, () => {
-                        this.scene.start('GameScene', { questions: shuffle([...questionData]) });
-                     });
+                // Display options
+                question.options.forEach(option => {
+                    const button = document.createElement('button');
+                    button.textContent = option;
+                    button.classList.add('option-btn', 'w-full', 'text-left', 'p-4', 'rounded-lg', 'border', 'border-gray-300', 'dark:border-gray-600', 'bg-gray-50', 'dark:bg-gray-700', 'hover:bg-gray-200', 'dark:hover:bg-gray-600');
+                    button.addEventListener('click', () => handleOptionClick(button, option, question.answer));
+                    optionsContainer.appendChild(button);
                 });
 
-                startButtonZone.on('pointerover', () => startButton.setAlpha(0.8));
-                startButtonZone.on('pointerout', () => startButton.setAlpha(1));
-            }
-        }
-
-        class GameScene extends Phaser.Scene {
-            constructor() {
-                super({ key: 'GameScene' });
-            }
-
-            init(data) {
-                this.questions = data.questions;
-                this.currentQuestionIndex = 0;
-                this.score = 0;
-            }
-
-            create() {
-                this.cameras.main.setBackgroundColor('#393e46');
-                this.cameras.main.fadeIn(300, 0, 0, 0);
-                
-                this.questionText = this.add.text(this.scale.width / 2, 80, '', {
-                    fontSize: '24px',
-                    color: '#eeeeee',
-                    fontFamily: 'Inter',
-                    wordWrap: { width: this.scale.width - 80 },
-                    align: 'center'
-                }).setOrigin(0.5);
-
-                this.answerButtons = [];
-                this.displayQuestion();
-            }
-
-            displayQuestion() {
-                const question = this.questions[this.currentQuestionIndex];
-                if (!question) {
-                    this.endGame();
-                    return;
-                }
-
-                this.questionText.setText(`${this.currentQuestionIndex + 1}. ${question.question}`);
-                
-                // Clear old buttons
-                this.answerButtons.forEach(button => {
-                    button.destroy();
-                });
-                this.answerButtons = [];
-                
-                const answers = Object.entries(question.answers);
-                const buttonHeight = 60;
-                const buttonSpacing = 20;
-                const totalHeight = (answers.length * buttonHeight) + ((answers.length - 1) * buttonSpacing);
-                let startY = this.scale.height / 2 - totalHeight / 2 + 100;
-
-                answers.forEach(([key, value]) => {
-                    this.createAnswerButton(key, value, startY);
-                    startY += buttonHeight + buttonSpacing;
-                });
-            }
-
-            createAnswerButton(key, text, y) {
-                const { width } = this.scale;
-                const buttonWidth = width - 80;
-                const buttonHeight = 60;
-                
-                const graphics = this.add.graphics();
-                graphics.fillStyle(0x4ecca3, 1);
-                graphics.fillRoundedRect(40, y, buttonWidth, buttonHeight, 16);
-
-                const answerText = this.add.text(width / 2, y + buttonHeight / 2, `${key}: ${text}`, {
-                    fontSize: '18px',
-                    color: '#232931',
-                    fontFamily: 'Inter',
-                    wordWrap: { width: buttonWidth - 40 },
-                    align: 'center'
-                }).setOrigin(0.5);
-
-                // --- FIX: Set the origin of the interactive zone to the top-left (0, 0) ---
-                // This ensures the zone perfectly overlays the visible button graphic.
-                const buttonZone = this.add.zone(40, y, buttonWidth, buttonHeight).setOrigin(0).setInteractive();
-                buttonZone.on('pointerdown', () => this.handleAnswer(key));
-                
-                this.answerButtons.push({ graphics, text: answerText, zone: buttonZone, key: key, destroy: () => {
-                    graphics.destroy();
-                    answerText.destroy();
-                    buttonZone.destroy();
-                }});
-            }
-
-            handleAnswer(selectedKey) {
-                 // Disable all buttons to prevent multiple clicks
-                this.answerButtons.forEach(button => button.zone.disableInteractive());
-
-                const question = this.questions[this.currentQuestionIndex];
-                const isCorrect = selectedKey === question.correct;
-                
-                const selectedButton = this.answerButtons.find(b => b.key === selectedKey);
-
-                if (isCorrect) {
-                    this.score++;
-                    selectedButton.graphics.clear().fillStyle(0x5cb85c, 1).fillRoundedRect(40, selectedButton.zone.y, this.scale.width - 80, 60, 16);
+                // Handle image display
+                if (question.image) {
+                    questionImage.src = question.image;
+                    questionImage.alt = `Figure for question ${question.id}`;
+                    questionImage.classList.remove('hidden');
                 } else {
-                    selectedButton.graphics.clear().fillStyle(0xd9534f, 1).fillRoundedRect(40, selectedButton.zone.y, this.scale.width - 80, 60, 16);
-                    
-                    // Highlight the correct answer
-                    const correctButton = this.answerButtons.find(b => b.key === question.correct);
-                    if (correctButton) {
-                         correctButton.graphics.clear().fillStyle(0x5cb85c, 1).fillRoundedRect(40, correctButton.zone.y, this.scale.width - 80, 60, 16);
-                    }
-                    
-                    // Show correct answer text
-                    this.add.text(this.scale.width / 2, this.scale.height - 50, `Correct answer was: ${question.correct}`, {
-                        fontSize: '20px', color: '#f0ad4e', fontFamily: 'Inter', fontStyle: 'bold'
-                    }).setOrigin(0.5).setDepth(1).setName('feedback');
+                    questionImage.classList.add('hidden');
                 }
 
-                this.time.delayedCall(2000, () => {
-                    const feedback = this.children.getByName('feedback');
-                    if(feedback) feedback.destroy();
-                    this.currentQuestionIndex++;
-                    this.displayQuestion();
-                });
+                // Disable Next button
+                nextBtn.disabled = true;
             }
 
-            endGame() {
-                this.cameras.main.fadeOut(300, 0, 0, 0);
-                this.time.delayedCall(300, () => {
-                    this.scene.start('GameOverScene', { score: this.score, total: this.questions.length });
-                });
-            }
-        }
+            function handleOptionClick(button, selectedOption, correctAnswer) {
+                if (optionsDisabled) return;
+                optionsDisabled = true;
 
-        class GameOverScene extends Phaser.Scene {
-            constructor() {
-                super({ key: 'GameOverScene' });
-            }
-
-            init(data) {
-                this.score = data.score;
-                this.total = data.total;
-            }
-
-            create() {
-                const { width, height } = this.scale;
-                this.cameras.main.setBackgroundColor('#2d2d2d');
-                this.cameras.main.fadeIn(300, 0, 0, 0);
-
-                this.add.text(width / 2, height * 0.25, 'Study Session Complete!', {
-                    fontSize: '38px',
-                    color: '#ffffff',
-                    fontStyle: 'bold',
-                    align: 'center'
-                }).setOrigin(0.5);
-
-                this.add.text(width / 2, height * 0.45, `Your Score: ${this.score} / ${this.total}`, {
-                    fontSize: '48px',
-                    color: '#4ecca3',
-                    fontStyle: 'bold',
-                    align: 'center'
-                }).setOrigin(0.5);
-
-                const restartButton = this.add.graphics({ fillStyle: { color: 0x4ecca3 } });
-                const restartButtonText = this.add.text(width / 2, height * 0.65, 'Study Again', {
-                    fontSize: '28px',
-                    color: '#232931',
-                    fontStyle: 'bold'
-                }).setOrigin(0.5);
-
-                const buttonWidth = 280;
-                const buttonHeight = 70;
-                restartButton.fillRoundedRect(width / 2 - buttonWidth / 2, height * 0.65 - buttonHeight / 2, buttonWidth, buttonHeight, 16);
+                const optionButtons = optionsContainer.querySelectorAll('.option-btn');
                 
-                const restartButtonZone = this.add.zone(width / 2 - buttonWidth / 2, height * 0.65 - buttonHeight / 2, buttonWidth, buttonHeight)
-                    .setOrigin(0)
-                    .setInteractive();
-
-                restartButtonZone.on('pointerdown', () => {
-                    this.cameras.main.fadeOut(300, 0, 0, 0);
-                    this.time.delayedCall(300, () => {
-                         this.scene.start('MainMenuScene');
+                if (selectedOption === correctAnswer) {
+                    button.classList.add('correct');
+                } else {
+                    button.classList.add('incorrect');
+                    // Highlight the correct answer
+                    optionButtons.forEach(btn => {
+                        if (btn.textContent === correctAnswer) {
+                            btn.classList.add('correct');
+                        }
                     });
-                });
-
-                restartButtonZone.on('pointerover', () => restartButton.setAlpha(0.8));
-                restartButtonZone.on('pointerout', () => restartButton.setAlpha(1));
+                }
+                nextBtn.disabled = false;
             }
-        }
 
-        // --- Game Configuration ---
-        const config = {
-            type: Phaser.AUTO,
-            scale: {
-                mode: Phaser.Scale.FIT,
-                parent: 'game-container',
-                autoCenter: Phaser.Scale.CENTER_BOTH,
-                width: 800,
-                height: 900
-            },
-            scene: [MainMenuScene, GameScene, GameOverScene]
-        };
+            nextBtn.addEventListener('click', () => {
+                currentQuestionIndex++;
+                if (currentQuestionIndex < totalQuestions) {
+                    displayQuestion(currentQuestionIndex);
+                } else {
+                    // Game over, show summary or restart
+                    questionText.textContent = "Congratulations! You've completed all questions.";
+                    optionsContainer.innerHTML = '';
+                    progressText.textContent = `Completed ${totalQuestions} of ${totalQuestions}`;
+                    questionIdText.textContent = 'Finished!';
+                    nextBtn.textContent = 'Restart';
+                    nextBtn.onclick = () => {
+                        currentQuestionIndex = 0;
+                        displayQuestion(currentQuestionIndex);
+                        nextBtn.textContent = 'Next Question';
+                        nextBtn.onclick = nextButtonClickHandler; // re-assign original handler
+                    };
+                }
+            });
+            
+            // Store the original click handler to re-assign it on restart
+            const nextButtonClickHandler = nextBtn.onclick;
 
-        // --- Start the Game ---
-        window.onload = () => {
-             // Hide the loading text and start Phaser
-            const loadingText = document.getElementById('loading-text');
-            if(loadingText) loadingText.style.display = 'none';
-            // Check if questionData is loaded
-            if (typeof questionData === 'undefined') {
-                document.getElementById('game-container').innerHTML = '<div style="color:red; text-align:center; padding: 20px;">Error: Could not load questions.js. Please make sure the file is in the same directory as the HTML file.</div>';
-                return;
-            }
-            const game = new Phaser.Game(config);
-        };
+            // Start the game
+            displayQuestion(currentQuestionIndex);
+        });
     </script>
 </body>
 </html>
