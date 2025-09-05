@@ -6,14 +6,19 @@
     <title>General Class Exam Study Game</title>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
     <style>
+        /* Improved styling for better mobile compatibility */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden; /* Prevents scrollbars */
+        }
         body {
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
             background-color: #333;
-            color: #fff;
             font-family: 'Inter', sans-serif;
         }
         #game-container {
@@ -333,6 +338,8 @@
                 this.score = data.score;
                 this.total = data.total;
             }
+
+
 
             create() {
                 const { width, height } = this.scale;
