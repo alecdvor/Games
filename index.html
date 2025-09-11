@@ -1,27 +1,229 @@
-# Games<br>
-A collection of wep apps I have made<br><br>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alec's Games</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+
+        body {
+            margin: 0;
+            font-family: 'Orbitron', sans-serif;
+            background-color: #0a0a0a;
+            color: #e0e0e0;
+            overflow: hidden;
+        }
+
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            color: #fff;
+            text-shadow: 0 0 10px #0ff, 0 0 20px #0ff, 0 0 30px #0ff, 0 0 40px #f0f;
+            animation: flicker 1.5s infinite alternate;
+        }
+
+        @keyframes flicker {
+            0%, 18%, 22%, 25%, 53%, 57%, 100% {
+                text-shadow:
+                0 0 4px #fff,
+                0 0 11px #fff,
+                0 0 19px #fff,
+                0 0 40px #0ff,
+                0 0 80px #0ff,
+                0 0 90px #0ff,
+                0 0 100px #0ff,
+                0 0 150px #0ff;
+            }
+            20%, 24%, 55% {        
+                text-shadow: none;
+            }
+        }
+
+        p {
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+            color: #aaa;
+        }
+
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .game-link {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid;
+            border-image-slice: 1;
+            border-image-source: linear-gradient(45deg, #f0f, #0ff);
+            padding: 20px;
+            text-decoration: none;
+            color: #e0e0e0;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .game-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-5px);
+            box-shadow: 0 0 15px #0ff, 0 0 25px #f0f;
+        }
+
+        .game-link h2 {
+            margin-top: 0;
+            font-size: 1.5rem;
+            color: #fff;
+        }
+
+        .game-link p {
+            font-size: 1rem;
+            color: #ccc;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="bg-canvas"></canvas>
+
+    <div class="container">
+        <h1>My Games</h1>
+        <p>A collection of web apps I have made</p>
+
+        <div class="game-grid">
+            <a href="https://alecdvor.github.io/Games/tradewars.html" class="game-link">
+                <h2>Trade Wars</h2>
+                <p>My version of a classic game called Dope Wars</p>
+            </a>
+            <a href="https://alecdvor.github.io/Games/lightsout.html" class="game-link">
+                <h2>LightsOut</h2>
+                <p>My version of the Tiger Handheld game I grew up playing</p>
+            </a>
+            <a href="https://alecdvor.github.io/Games/ur.html" class="game-link">
+                <h2>The Royal Game of Ur</h2>
+                <p>My version of the 4000 year old game</p>
+            </a>
+            <a href="https://alecdvor.github.io/Games/bowling.html" class="game-link">
+                <h2>Bowling</h2>
+                <p>Drag and flick the ball down the lane</p>
+            </a>
+            <a href="https://alecdvor.github.io/Games/simplefarm.html" class="game-link">
+                <h2>Simple Farm</h2>
+                <p>Move with arrow keys and plant crops with spacebar</p>
+            </a>
+        </div>
+    </div>
+
+    <audio id="click-sound" src="https://www.myinstants.com/media/sounds/mouse-click.mp3" preload="auto"></audio>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Sound Effect
+        const clickSound = document.getElementById('click-sound');
+        const links = document.querySelectorAll('.game-link');
+        links.forEach(link => {
+            link.addEventListener('click', (e) => {
+                clickSound.currentTime = 0;
+                clickSound.play();
+            });
+        });
+
+        // Three.js Background
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({
+            canvas: document.getElementById('bg-canvas'),
+        });
+
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        camera.position.z = 5;
+
+        const particleCount = 5000;
+        const particles = new THREE.BufferGeometry();
+        const positions = new Float32Array(particleCount * 3);
+
+        for (let i = 0; i < particleCount * 3; i++) {
+            positions[i] = (Math.random() - 0.5) * 10;
+        }
+
+        particles.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+        const particleMaterial = new THREE.PointsMaterial({
+            color: 0x00ffff,
+            size: 0.02,
+            blending: THREE.AdditiveBlending,
+            transparent: true,
+        });
+
+        const particleSystem = new THREE.Points(particles, particleMaterial);
+        scene.add(particleSystem);
+
+        const mouse = new THREE.Vector2();
+        window.addEventListener('mousemove', (event) => {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        });
+        
+        window.addEventListener('resize', () => {
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+        });
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            particleSystem.rotation.y += 0.0001;
+            particleSystem.rotation.x += 0.0001;
+            
+            // Particle interaction
+            const positions = particleSystem.geometry.attributes.position.array;
+            for (let i = 0; i < particleCount; i++) {
+                const ix = i * 3;
+                const iy = i * 3 + 1;
+                const iz = i * 3 + 2;
+
+                const dx = positions[ix] - (mouse.x * 5);
+                const dy = positions[iy] - (mouse.y * 5);
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < 1) {
+                    const force = (1 - distance) * 0.02;
+                    positions[ix] += (positions[ix] - (mouse.x * 5)) * force;
+                    positions[iy] += (positions[iy] - (mouse.y * 5)) * force;
+                }
+            }
+            particleSystem.geometry.attributes.position.needsUpdate = true;
 
 
-<a href="https://alecdvor.github.io/Games/tradewars.html">
-Trade Wars</a><br>
-My version of a classic game called Dope Wars<br><br><br>
+            renderer.render(scene, camera);
+        }
 
-<a href="https://alecdvor.github.io/Games/lightsout.html">
-LightsOut</a><br>
-My version of the Tiger Handheld game I grew up playing<br>
-<br><br>
+        animate();
+    </script>
 
-<a href="https://alecdvor.github.io/Games/ur.html">
-The Royal Game of Ur</a><br>
-My version of the 4000 year old game<br>
-<br><br>
-
-<a href="https://alecdvor.github.io/Games/bowling.html">
-Bowling - Work in progress</a><br>
-Drag and flick the ball down the lane<br>
-<br><br>
-
-<a href="https://alecdvor.github.io/Games/simplefarm.html">
-Simple Farm - Work in progress</a><br>
-Move with arrow keys and plant crops with spacebar<br>
-<br><br>
+</body>
+</html>
