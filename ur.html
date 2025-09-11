@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Royal Game of Ur</title>
+    <!-- Importing the three requested JS libraries from CDNs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.4.0/pixi.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #1a1a1a;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+        }
+        /* Style to position the main game canvas over the p5.js background canvas */
+        #game-container {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            overflow: hidden;
+        }
+        #p5-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1; /* Behind the game */
+        }
+        #phaser-game {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 2; /* In front of the background */
+        }
+        h1 {
+            margin-bottom: 8px;
+        }
+        p {
+            margin-top: 0;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+    <h1>The Royal Game of Ur</h1>
+    <p>You (White) vs. Computer (Black)</p>
+    <div id="game-container">
+        <!-- Canvases for p5 background and Phaser game will be placed here -->
+        <div id="p5-background"></div>
+        <div id="phaser-game"></div>
+    </div>
+
+<script type="text/javascript">
+// --- Global Constants ---
+const BOARD_COLS = 8;
+const BOARD_ROWS = 3;
+const TILE_SIZE = 64;
+const PIECE_RADIUS = TILE_SIZE * 0.4;
+const NUM_PIECES = 7;
+
+// Game board layout configuration
+const GAME_CONFIG = {
+    width: 800,
+    height: 600,
+    board_origin_x: (800 - BOARD_COLS * TILE_SIZE) / 2,
+    board_origin_y: (600 - BOARD_ROWS * TILE_SIZE) / 2,
+    // Paths for player and computer pieces (0-indexed)
+    // 0-3 are safe zones, 4-11 are conflict zone, 12-13 are safe zones
+    playerPath: [
+        { r: 2, c: 3 }, { r: 2, c: 2 }, { r: 2, c: 1 }, { r: 2, c: 0 }, // Entry path
+        { r: 1, c: 0 }, { r: 1, c: 1 }, { r: 1, c: 2 }, { r: 1, c: 3 }, // War path
+        { r: 1, c: 4 }, { r: 1, c: 5 }, { r: 1, c: 6 }, { r: 1, c: 7 },
+        { r: 2, c: 7 }, { r: 2, c: 6 }  // Exit path
+    ],
+    computerPath: [
+        { r: 0, c: 3 }, { r: 0, c: 2 }, { r: 0, c: 1 }, { r: 0, c: 0 }, // Entry path
+        { r: 1, c: 0 }, { r: 1, c: 1 }, { r: 1, c: 2 }, { r: 1, c: 3 }, // War path
+        { r: 1, c: 4 }, { r: 1, c: 5 }, { r: 1, c: 6 }, { r: 1, c: 7 },
+        { r: 0, c: 7 }, { r: 0, c: 6 }  // Exit path
+    ],
+    // Rosette squares grant an extra turn. Path indices are 0-based.
+    rosettes: [3, 7, 13]
+};
+
+// --- 1. P5.js Background Sketch ---
+// Using instance mode to avoid global conflicts
+const sketch = (p) => {
+    let particles = [];
+    class Particle {
+        constructor() {
+            this.x = p.random(0, p.width);
+            this.y = p.random(0, p.height);
+            this.r = p.random(1, 4);
+            this.xSpeed = p.random(-0.5, 0.5);
+            this.ySpeed = p.random(-0.5, 0.5);
+        }
+        createParticle() {
+            p.noStroke();
+            p.fill('rgba(200, 165, 255, 0.1)');
+            p.circle(this.x, this.y, this.r * 2);
+        }
+        moveParticle() {
+            if (this.x < 0 || this.x > p.width) this.xSpeed *= -1;
+            if (this.y < 0 || this.y > p.height) this.ySpeed *= -1;
+            this.x += this.xSpeed;
+            this.y += this.ySpeed;
+        }
+    }
+
+    p.setup = () => {
+        p.createCanvas(GAME_CONFIG.width, GAME_CONFIG.height);
+        for (let i = 0; i < p.width / 10; i++) {
+            particles.push(new Particle());
+        }
+    };
+
+    p.draw = () => {
+        p.background('#11071F');
+        for (let i = 0; i < particles.length; i++) {
+            particles[i].createParticle();
+            particles[i].moveParticle();
+        }
+    };
+};
+new p5(sketch, 'p5-background');
+
+
+// --- 2. PIXI.js Piece Texture Generation ---
+// This function uses Pixi to draw a game piece and returns a texture
+// that Phaser can use.
+function createPieceTexture(app, isPlayer) {
+    const graphics = new PIXI.Graphics();
+    const primaryColor = isPlayer ? 0xFFFFFF : 0x333333; // White for player, Black for computer
+    const secondaryColor = isPlayer ? 0xCCCCCC : 0x666666;
+
+    // Base circle
+    graphics.beginFill(primaryColor);
+    graphics.drawCircle(PIECE_RADIUS, PIECE_RADIUS, PIECE_RADIUS);
+    graphics.endFill();
+
+    // Inner decorative circles for a simple pattern
+    graphics.beginFill(secondaryColor);
+    graphics.drawCircle(PIECE_RADIUS, PIECE_RADIUS, PIECE_RADIUS * 0.7);
+    graphics.endFill();
+    graphics.beginFill(primaryColor);
+    graphics.drawCircle(PIECE_RADIUS, PIECE_RADIUS, PIECE_RADIUS * 0.4);
+    graphics.endFill();
+
+    // The renderer generates a texture from the graphics object
+    return app.renderer.generateTexture(graphics);
+}
+
+
+// --- 3. PHASER.js Main Game Scene ---
+class GameScene extends Phaser.Scene {
+    constructor() {
+        super({ key: 'GameScene' });
+    }
+
+    // A. Preload: Generate textures using Pixi
+    preload() {
+        // Create a temporary Pixi application to generate textures
+        const pixiApp = new PIXI.Application({ width: PIECE_RADIUS * 2, height: PIECE_RADIUS * 2, backgroundAlpha: 0 });
+        
+        const playerTexture = createPieceTexture(pixiApp, true);
+        const computerTexture = createPieceTexture(pixiApp, false);
+
+        // Convert Pixi Textures to something Phaser can use
+        // We do this by drawing the texture to a canvas and loading that canvas into Phaser
+        const playerCanvas = pixiApp.renderer.extract.canvas(playerTexture);
+        this.textures.addCanvas('player_piece', playerCanvas);
+
+        const computerCanvas = pixiApp.renderer.extract.canvas(computerTexture);
+        this.textures.addCanvas('computer_piece', computerCanvas);
+
+        pixiApp.destroy(true); // Clean up the temporary Pixi app
+    }
+
+    // B. Create: Setup the game board, pieces, and UI
+    create() {
+        this.drawBoard();
+
+        // Game state variables
+        this.playerPieces = [];
+        this.computerPieces = [];
+        this.playerScore = 0;
+        this.computerScore = 0;
+        this.isPlayerTurn = true;
+        this.diceRoll = 0;
+
+        // Message and score text
+        this.statusText = this.add.text(GAME_CONFIG.width / 2, 40, 'Welcome! Click "Roll Dice" to start.', { fontSize: '24px', fill: '#fff' }).setOrigin(0.5);
+        this.playerScoreText = this.add.text(120, 550, 'Your Score: 0', { fontSize: '20px', fill: '#fff' }).setOrigin(0.5);
+        this.computerScoreText = this.add.text(GAME_CONFIG.width - 120, 550, 'CPU Score: 0', { fontSize: '20px', fill: '#fff' }).setOrigin(0.5);
+        this.rollDisplayText = this.add.text(GAME_CONFIG.width / 2, 495, 'Last Roll: -', { fontSize: '22px', fill: '#FFD700', fontStyle: 'bold' }).setOrigin(0.5);
+        
+        this.setupPieces();
+        this.createRollButton();
+    }
+    
+    // -- Create Helpers --
+    drawBoard() {
+        const graphics = this.add.graphics();
+
+        // Map of tile coordinates (r, c) to the function that draws the symbol on it
+        // This makes it easy to add more symbols later.
+        const symbolMap = {
+            '0,0': this.drawDetailedRosette,
+            '0,6': this.drawDetailedRosette,
+            '1,3': this.drawDetailedRosette,
+            '2,0': this.drawDetailedRosette,
+            '2,6': this.drawDetailedRosette,
+            '0,1': this.drawFourEyes,
+            '0,3': this.drawFourEyes,
+            '1,6': this.drawFourEyes,
+            '2,1': this.drawFourEyes,
+            '2,3': this.drawFourEyes,
+            '1,2': this.drawPassageSymbol,
+            '1,5': this.drawPassageSymbol,
+            '0,2': this.drawFiveHoleSymbol,
+            '1,1': this.drawFiveHoleSymbol,
+            '1,4': this.drawFiveHoleSymbol,
+            '1,7': this.drawFiveHoleSymbol,
+            '2,2': this.drawFiveHoleSymbol,
+            '0,7': this.drawConcentricSquareSymbol,
+            '2,7': this.drawConcentricSquareSymbol,
+            '1,0': this.drawGridSymbol, // The final symbol
+        };
+
+        for (let r = 0; r < BOARD_ROWS; r++) {
+            for (let c = 0; c < BOARD_COLS; c++) {
+                // Skip the blank spaces on the board
+                if ((r === 0 || r === 2) && (c === 4 || c === 5)) continue;
+                
+                const x = GAME_CONFIG.board_origin_x + c * TILE_SIZE;
+                const y = GAME_CONFIG.board_origin_y + r * TILE_SIZE;
+
+                // Alternate tile colors for a checkerboard effect
+                const isDark = (r + c) % 2 === 0;
+                graphics.fillStyle(isDark ? 0x8B4513 : 0xD2B48C, 1); // Dark and light brown
+                graphics.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+                graphics.lineStyle(2, 0x4A2511, 1); // Border color
+                graphics.strokeRect(x, y, TILE_SIZE, TILE_SIZE);
+
+                // Check if the current tile should have a symbol and draw it
+                const key = `${r},${c}`;
+                if (symbolMap[key]) {
+                    // .call(this, ...) ensures the drawing function can access `this` scene
+                    symbolMap[key].call(this, graphics, c, r);
+                }
+            }
+        }
+    }
+    
+    drawDetailedRosette(graphics, c, r) {
+        const centerX = GAME_CONFIG.board_origin_x + c * TILE_SIZE + TILE_SIZE / 2;
+        const centerY = GAME_CONFIG.board_origin_y + r * TILE_SIZE + TILE_SIZE / 2;
+        const petalLength = TILE_SIZE * 0.45; // Length from center to tip
+        const petalWidth = TILE_SIZE * 0.25;  // Max width of a petal
+        const centerRadius = TILE_SIZE * 0.1; // The small center circle
+
+        // Define two alternating colors for the petals
+        const colorA = 0xFFD700; // Original Gold
+        const colorB = 0xFFB700; // A slightly darker, more orange gold
+        
+        graphics.lineStyle(1, 0xDAA520, 0.8); // Darker gold for stroke
+
+        const singlePetal = [
+            new Phaser.Geom.Point(0, -centerRadius),
+            new Phaser.Geom.Point(petalWidth / 2, -petalLength / 2),
+            new Phaser.Geom.Point(0, -petalLength),
+            new Phaser.Geom.Point(-petalWidth / 2, -petalLength / 2)
+        ];
+        
+        const rotationOffset = Math.PI / 8; 
+
+        for (let i = 0; i < 8; i++) {
+            const angle = i * (Math.PI / 4) + rotationOffset;
+            
+            // Set the fill style based on whether the petal index is even or odd
+            const petalColor = (i % 2 === 0) ? colorA : colorB;
+            graphics.fillStyle(petalColor, 0.75); // Gold with some transparency
+
+            const rotatedPetalPoints = singlePetal.map(p => {
+                 const pointToRotate = Phaser.Geom.Point.Clone(p);
+                 Phaser.Math.RotateAround(pointToRotate, 0, 0, angle);
+                 pointToRotate.x += centerX;
+                 pointToRotate.y += centerY;
+                 return pointToRotate;
+            });
+            graphics.fillPoints(rotatedPetalPoints, true);
+            graphics.strokePoints(rotatedPetalPoints, true);
+        }
+
+        graphics.fillStyle(0x4A2511, 1);
+        graphics.fillCircle(centerX, centerY, centerRadius * 1.2);
+    }
+
+    drawFourEyes(graphics, c, r) {
+        const centerX = GAME_CONFIG.board_origin_x + c * TILE_SIZE + TILE_SIZE / 2;
+        const centerY = GAME_CONFIG.board_origin_y + r * TILE_SIZE + TILE_SIZE / 2;
+        const eyeWidth = TILE_SIZE * 0.15;
+        const eyeHeight = TILE_SIZE * 0.35;
+        const offset = TILE_SIZE * 0.22;
+
+        const positions = [
+            { x: centerX - offset, y: centerY - offset }, { x: centerX + offset, y: centerY - offset },
+            { x: centerX - offset, y: centerY + offset }, { x: centerX + offset, y: centerY + offset }
+        ];
+
+        graphics.fillStyle(0x4A2511, 0.6);
+        graphics.lineStyle(1, 0x000000, 0.7);
+
+        positions.forEach(pos => {
+            const points = [
+                new Phaser.Geom.Point(pos.x, pos.y - eyeHeight / 2), new Phaser.Geom.Point(pos.x + eyeWidth / 2, pos.y),
+                new Phaser.Geom.Point(pos.x, pos.y + eyeHeight / 2), new Phaser.Geom.Point(pos.x - eyeWidth / 2, pos.y)
+            ];
+            graphics.fillPoints(points, true);
+            graphics.strokePoints(points, true);
+
+            graphics.lineStyle(2, 0x000000, 0.9);
+            graphics.beginPath();
+            graphics.moveTo(pos.x, pos.y - eyeHeight * 0.25);
+            graphics.lineTo(pos.x, pos.y + eyeHeight * 0.25);
+            graphics.strokePath();
+        });
+    }
+
+    drawPassageSymbol(graphics, c, r) {
+        const tileX = GAME_CONFIG.board_origin_x + c * TILE_SIZE;
+        const tileY = GAME_CONFIG.board_origin_y + r * TILE_SIZE;
+        const dieAreaSize = TILE_SIZE * 0.4;
+        const offset = TILE_SIZE * 0.25;
+
+        const dieCenters = [
+            { x: tileX + offset, y: tileY + offset }, { x: tileX + TILE_SIZE - offset, y: tileY + offset },
+            { x: tileX + offset, y: tileY + TILE_SIZE - offset }, { x: tileX + TILE_SIZE - offset, y: tileY + TILE_SIZE - offset }
+        ];
+
+        dieCenters.forEach(center => {
+            graphics.lineStyle(1.5, 0x111111, 0.8);
+            this.drawPostageStampBorder(graphics, center.x, center.y, dieAreaSize);
+
+            graphics.fillStyle(0x111111, 0.7);
+            const dotRadius = dieAreaSize * 0.1;
+            const dotOffset = dieAreaSize * 0.3;
+            graphics.fillCircle(center.x, center.y, dotRadius);
+            graphics.fillCircle(center.x - dotOffset, center.y - dotOffset, dotRadius);
+            graphics.fillCircle(center.x + dotOffset, center.y - dotOffset, dotRadius);
+            graphics.fillCircle(center.x - dotOffset, center.y + dotOffset, dotRadius);
+            graphics.fillCircle(center.x + dotOffset, center.y + dotOffset, dotRadius);
+        });
+    }
+
+    drawPostageStampBorder(graphics, cx, cy, size) {
+        const half = size / 2;
+        const x1 = cx - half; const y1 = cy - half;
+        const x2 = cx + half; const y2 = cy + half;
+        const numTeeth = 5;
+        const segment = size / numTeeth;
+        const depth = size * 0.1;
+
+        graphics.beginPath();
+        graphics.moveTo(x1, y1);
+        for (let i = 0; i < numTeeth; i++) { graphics.lineTo(x1 + i * segment + segment / 2, y1 - depth); graphics.lineTo(x1 + (i + 1) * segment, y1); }
+        for (let i = 0; i < numTeeth; i++) { graphics.lineTo(x2 + depth, y1 + i * segment + segment / 2); graphics.lineTo(x2, y1 + (i + 1) * segment); }
+        for (let i = 0; i < numTeeth; i++) { graphics.lineTo(x2 - i * segment - segment / 2, y2 + depth); graphics.lineTo(x2 - (i + 1) * segment, y2); }
+        for (let i = 0; i < numTeeth; i++) { graphics.lineTo(x1 - depth, y2 - i * segment - segment / 2); graphics.lineTo(x1, y2 - (i + 1) * segment); }
+        graphics.closePath();
+        graphics.strokePath();
+    }
+
+    drawConcentricSquareSymbol(graphics, c, r) {
+        const centerX = GAME_CONFIG.board_origin_x + c * TILE_SIZE + TILE_SIZE / 2;
+        const centerY = GAME_CONFIG.board_origin_y + r * TILE_SIZE + TILE_SIZE / 2;
+
+        const dotRadius = TILE_SIZE * 0.05;
+        const dotOffset = TILE_SIZE * 0.15;
+        const dotPositions = [
+            { x: centerX, y: centerY }, { x: centerX - dotOffset, y: centerY - dotOffset },
+            { x: centerX + dotOffset, y: centerY - dotOffset }, { x: centerX - dotOffset, y: centerY + dotOffset },
+            { x: centerX + dotOffset, y: centerY + dotOffset }
+        ];
+
+        graphics.fillStyle(0x111111, 0.8);
+        dotPositions.forEach(pos => { graphics.fillCircle(pos.x, pos.y, dotRadius); });
+        
+        graphics.lineStyle(1.5, 0x111111, 0.8);
+        this.drawPostageStampBorder(graphics, centerX, centerY, TILE_SIZE * 0.55);
+        this.drawPostageStampBorder(graphics, centerX, centerY, TILE_SIZE * 0.8);
+    }
+
+    drawFiveHoleSymbol(graphics, c, r) {
+        const centerX = GAME_CONFIG.board_origin_x + c * TILE_SIZE + TILE_SIZE / 2;
+        const centerY = GAME_CONFIG.board_origin_y + r * TILE_SIZE + TILE_SIZE / 2;
+        const dotRadius = TILE_SIZE * 0.05;
+        const circleRadius = TILE_SIZE * 0.12;
+        const offset = TILE_SIZE * 0.25;
+
+        const positions = [
+            { x: centerX, y: centerY }, { x: centerX - offset, y: centerY - offset },
+            { x: centerX + offset, y: centerY - offset }, { x: centerX - offset, y: centerY + offset },
+            { x: centerX + offset, y: centerY + offset }
+        ];
+
+        graphics.fillStyle(0x111111, 0.8);
+        graphics.lineStyle(1.5, 0x111111, 0.8);
+
+        positions.forEach(pos => {
+            graphics.fillCircle(pos.x, pos.y, dotRadius);
+            graphics.strokeCircle(pos.x, pos.y, circleRadius);
+        });
+    }
+
+    drawGridSymbol(graphics, c, r) {
+        const tileX = GAME_CONFIG.board_origin_x + c * TILE_SIZE;
+        const tileY = GAME_CONFIG.board_origin_y + r * TILE_SIZE;
+        
+        // Increased margin to give the whole symbol more space from the tile edge.
+        const borderMargin = TILE_SIZE * 0.1;
+        const outerSize = TILE_SIZE - (borderMargin * 2);
+        
+        const outerX = tileX + borderMargin;
+        const outerY = tileY + borderMargin;
+
+        graphics.lineStyle(2, 0x111111, 0.8);
+        graphics.strokeRect(outerX, outerY, outerSize, outerSize);
+
+        const gridSize = 4;
+        const cellSize = outerSize / gridSize; // The size of each cell in the 4x4 grid.
+        
+        // Define the gap to create whitespace between small squares.
+        const gap = cellSize * 0.15; 
+        const smallSquareSize = cellSize - gap;
+        const dotRadius = smallSquareSize * 0.15;
+
+        for (let gridR = 0; gridR < gridSize; gridR++) {
+            for (let gridC = 0; gridC < gridSize; gridC++) {
+                // Calculate the top-left corner of the smaller square, including the gap offset.
+                const smallX = outerX + (gridC * cellSize) + (gap / 2);
+                const smallY = outerY + (gridR * cellSize) + (gap / 2);
+                
+                graphics.strokeRect(smallX, smallY, smallSquareSize, smallSquareSize);
+
+                // Skip dots for the two center squares on top and bottom rows
+                const isTopRowCenter = (gridR === 0 && (gridC === 1 || gridC === 2));
+                const isBottomRowCenter = (gridR === 3 && (gridC === 1 || gridC === 2));
+
+                if (!isTopRowCenter && !isBottomRowCenter) {
+                    graphics.fillStyle(0x111111, 0.9);
+                    graphics.fillCircle(smallX + smallSquareSize / 2, smallY + smallSquareSize / 2, dotRadius);
+                }
+            }
+        }
+    }
+
+    setupPieces() {
+        for (let i = 0; i < NUM_PIECES; i++) {
+            // Player pieces off-board to start
+            const p_x = 50 + i * (PIECE_RADIUS * 1.2);
+            const p_y = 150;
+            const playerPiece = this.add.sprite(p_x, p_y, 'player_piece').setInteractive();
+            this.playerPieces.push({ sprite: playerPiece, pathIndex: -1 }); // -1: not on board
+
+            // Computer pieces off-board to start
+            const c_x = GAME_CONFIG.width - 50 - i * (PIECE_RADIUS * 1.2);
+            const c_y = 150;
+            const computerPiece = this.add.sprite(c_x, c_y, 'computer_piece');
+            this.computerPieces.push({ sprite: computerPiece, pathIndex: -1 });
+        }
+    }
+
+    createRollButton() {
+        const button = this.add.graphics().fillStyle(0x006400, 1).fillRoundedRect(GAME_CONFIG.width / 2 - 100, 520, 200, 50, 16);
+        const buttonText = this.add.text(GAME_CONFIG.width / 2, 545, 'Roll Dice', { fontSize: '24px', fill: '#fff' }).setOrigin(0.5);
+        const buttonZone = this.add.zone(GAME_CONFIG.width / 2 - 100, 520, 200, 50).setOrigin(0).setInteractive();
+
+        buttonZone.on('pointerdown', () => {
+            if (this.isPlayerTurn && this.diceRoll === 0) {
+                this.rollDice();
+            }
+        });
+        buttonZone.on('pointerover', () => button.clear().fillStyle(0x008000, 1).fillRoundedRect(GAME_CONFIG.width / 2 - 100, 520, 200, 50, 16));
+        buttonZone.on('pointerout', () => button.clear().fillStyle(0x006400, 1).fillRoundedRect(GAME_CONFIG.width / 2 - 100, 520, 200, 50, 16));
+    }
+    
+    // -- Game Logic --
+    rollDice() {
+        let roll = 0;
+        // Simulate 4 tetrahedral dice, each with 2 marked corners (50% chance)
+        for (let i = 0; i < 4; i++) {
+            if (Math.random() < 0.5) roll++;
+        }
+        this.diceRoll = roll;
+        this.rollDisplayText.setText(`Last Roll: ${roll}`);
+
+        if (roll === 0) {
+            this.statusText.setText(`You rolled a 0. Turn over.`);
+            this.endTurn();
+        } else {
+            this.statusText.setText(`You rolled a ${roll}. Select a piece to move.`);
+            this.showValidMoves();
+        }
+    }
+
+    showValidMoves() {
+        const validMoves = this.getValidMoves(this.playerPieces, this.diceRoll);
+        if (validMoves.length === 0) {
+            this.statusText.setText(`You rolled a ${this.diceRoll}, but have no valid moves.`);
+            this.endTurn();
+            return;
+        }
+
+        // Add glow effect and click handler to valid pieces
+        validMoves.forEach(piece => {
+            piece.sprite.setTint(0x00ff00); // Green tint
+            piece.sprite.once('pointerdown', () => this.movePiece(piece));
+        });
+    }
+
+    getValidMoves(pieces, roll) {
+        const friendlyPieces = pieces;
+        const validMoves = [];
+        
+        for (const piece of friendlyPieces) {
+            const targetIndex = piece.pathIndex + roll;
+            if (targetIndex >= GAME_CONFIG.playerPath.length) continue; // Cannot overshoot
+            
+            // Check if target spot is occupied by a friendly piece
+            let isOccupied = false;
+            for (const otherPiece of friendlyPieces) {
+                if (otherPiece.pathIndex === targetIndex) {
+                    isOccupied = true;
+                    break;
+                }
+            }
+            if (!isOccupied) {
+                validMoves.push(piece);
+            }
+        }
+        return validMoves;
+    }
+    
+    movePiece(piece) {
+        // Clear highlights and interactivity from all pieces
+        this.playerPieces.forEach(p => {
+            p.sprite.clearTint().removeAllListeners('pointerdown');
+        });
+
+        const targetIndex = piece.pathIndex + this.diceRoll;
+
+        // Check if piece is borne off
+        if (targetIndex === GAME_CONFIG.playerPath.length) {
+            this.playerScore++;
+            this.playerScoreText.setText(`Your Score: ${this.playerScore}`);
+            piece.sprite.destroy();
+            // Remove piece from array
+            this.playerPieces = this.playerPieces.filter(p => p !== piece);
+        } else {
+             // Normal move
+            piece.pathIndex = targetIndex;
+            const targetCoord = this.getCanvasCoords(GAME_CONFIG.playerPath[targetIndex]);
+            this.add.tween({
+                targets: piece.sprite,
+                x: targetCoord.x,
+                y: targetCoord.y,
+                duration: 500,
+                ease: 'Power2'
+            });
+
+            // Check for capture
+            this.checkCapture(piece);
+        }
+
+        if (this.playerScore === NUM_PIECES) {
+             this.statusText.setText('You have won the game!');
+             return;
+        }
+        
+        const isOnRosette = GAME_CONFIG.rosettes.includes(targetIndex);
+        if (isOnRosette) {
+             this.statusText.setText(`Landed on a rosette! You get another turn.`);
+             this.diceRoll = 0; // Reset for next roll
+        } else {
+            this.endTurn();
+        }
+    }
+    
+    checkCapture(movedPiece) {
+        // Captures only happen in the middle row (path indices 4 to 11)
+        if (movedPiece.pathIndex < 4 || movedPiece.pathIndex > 11) return;
+
+        let captured = null;
+        for (const opponent of this.computerPieces) {
+            if (opponent.pathIndex === movedPiece.pathIndex) {
+                captured = opponent;
+                break;
+            }
+        }
+        
+        if (captured) {
+            captured.pathIndex = -1;
+            const homeIndex = this.computerPieces.indexOf(captured);
+            this.add.tween({
+                targets: captured.sprite,
+                x: GAME_CONFIG.width - 50 - homeIndex * (PIECE_RADIUS * 1.2),
+                y: 150,
+                duration: 500,
+                ease: 'Power2'
+            });
+            this.statusText.setText('You captured an opponent\'s piece!');
+        }
+    }
+
+    endTurn() {
+        this.diceRoll = 0;
+        this.isPlayerTurn = !this.isPlayerTurn;
+
+        if (!this.isPlayerTurn) {
+            this.statusText.setText("Computer's turn...");
+            // Use a short delay to simulate thinking
+            this.time.delayedCall(1500, this.computerTurn, [], this);
+        }
+    }
+    
+    // -- Computer AI --
+    computerTurn() {
+        let roll = 0;
+        for (let i = 0; i < 4; i++) {
+            if (Math.random() < 0.5) roll++;
+        }
+        this.rollDisplayText.setText(`Last Roll: ${roll}`);
+
+        if (roll === 0) {
+            this.statusText.setText(`Computer rolled a 0. Your turn.`);
+            this.endTurn();
+            return;
+        }
+        
+        this.statusText.setText(`Computer rolled a ${roll}.`);
+        
+        const validMoves = this.getValidMoves(this.computerPieces, roll);
+        if (validMoves.length === 0) {
+             this.statusText.setText(`Computer has no valid moves. Your turn.`);
+             this.endTurn();
+             return;
+        }
+
+        // AI Logic: pick a random valid move
+        const pieceToMove = validMoves[Math.floor(Math.random() * validMoves.length)];
+        
+        this.time.delayedCall(1000, () => this.moveComputerPiece(pieceToMove, roll), []);
+    }
+    
+    moveComputerPiece(piece, roll) {
+        const targetIndex = piece.pathIndex + roll;
+
+        if (targetIndex === GAME_CONFIG.computerPath.length) {
+            this.computerScore++;
+            this.computerScoreText.setText(`CPU Score: ${this.computerScore}`);
+            piece.sprite.destroy();
+            this.computerPieces = this.computerPieces.filter(p => p !== piece);
+        } else {
+            piece.pathIndex = targetIndex;
+            const targetCoord = this.getCanvasCoords(GAME_CONFIG.computerPath[targetIndex]);
+            this.add.tween({
+                targets: piece.sprite,
+                x: targetCoord.x,
+                y: targetCoord.y,
+                duration: 500,
+                ease: 'Power2'
+            });
+            
+            // Check for capture (computer capturing player)
+            if (piece.pathIndex >= 4 && piece.pathIndex <= 11) {
+                let captured = null;
+                for (const opponent of this.playerPieces) {
+                    if (opponent.pathIndex === piece.pathIndex) {
+                        captured = opponent;
+                        break;
+                    }
+                }
+                if (captured) {
+                    captured.pathIndex = -1;
+                    const homeIndex = this.playerPieces.indexOf(captured);
+                    this.add.tween({
+                        targets: captured.sprite,
+                        x: 50 + homeIndex * (PIECE_RADIUS * 1.2),
+                        y: 150,
+                        duration: 500,
+                        ease: 'Power2'
+                    });
+                     this.statusText.setText('The computer captured your piece!');
+                }
+            }
+        }
+        
+        if (this.computerScore === NUM_PIECES) {
+             this.statusText.setText('The computer has won. Better luck next time!');
+             return;
+        }
+        
+        const isOnRosette = GAME_CONFIG.rosettes.includes(targetIndex);
+        if (isOnRosette) {
+             this.statusText.setText(`Computer landed on a rosette. It gets another turn.`);
+             this.time.delayedCall(1500, this.computerTurn, [], this);
+        } else {
+             this.statusText.setText('Your turn. Click "Roll Dice".');
+             this.endTurn();
+        }
+    }
+    
+    // -- Utility --
+    getCanvasCoords(coord) {
+        return {
+            x: GAME_CONFIG.board_origin_x + coord.c * TILE_SIZE + TILE_SIZE / 2,
+            y: GAME_CONFIG.board_origin_y + coord.r * TILE_SIZE + TILE_SIZE / 2,
+        };
+    }
+}
+
+// Phaser Game Configuration
+const config = {
+    type: Phaser.AUTO,
+    width: GAME_CONFIG.width,
+    height: GAME_CONFIG.height,
+    parent: 'phaser-game',
+    transparent: true, // Make canvas transparent to see p5 background
+    scene: [GameScene]
+};
+
+// Start the game
+const game = new Phaser.Game(config);
+
+</script>
+</body>
+</html>
+
+
+
