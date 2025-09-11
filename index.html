@@ -138,16 +138,24 @@
     </div>
 
     <audio id="click-sound" src="https://www.myinstants.com/media/sounds/mouse-click.mp3" preload="auto"></audio>
+    <audio id="hover-sound" src="https://www.myinstants.com/media/sounds/beep-07a.mp3" preload="auto"></audio>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-        // Sound Effect
+        // Sound Effects
         const clickSound = document.getElementById('click-sound');
+        const hoverSound = document.getElementById('hover-sound');
         const links = document.querySelectorAll('.game-link');
+
         links.forEach(link => {
-            link.addEventListener('click', (e) => {
+            link.addEventListener('click', () => {
                 clickSound.currentTime = 0;
                 clickSound.play();
+            });
+
+            link.addEventListener('mouseover', () => {
+                hoverSound.currentTime = 0;
+                hoverSound.play();
             });
         });
 
